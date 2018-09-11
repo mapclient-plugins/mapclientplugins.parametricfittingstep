@@ -2,8 +2,12 @@
 Created on Aug 29, 2017
 
 @author: Richard Christie
+
+Last Modigified on Aug 23, 2018 by Mahyar Osanlouy
 """
 import types
+import sys
+import numpy as np
 
 from PySide import QtGui, QtCore
 from functools import partial
@@ -11,6 +15,14 @@ from functools import partial
 from mapclientplugins.meshgeneratorstep.model.fiducialmarkermodel import FIDUCIAL_MARKER_LABELS
 from mapclientplugins.meshgeneratorstep.view.ui_meshgeneratorwidget import Ui_MeshGeneratorWidget
 from opencmiss.utils.maths import vectorops
+from opencmiss.zinc.status import OK as ZINC_OK
+
+from scaffoldmaker.utils.zinc_utils import *
+
+sys.path.append(
+    '/hpc/mosa004/mapclient-plugins/mapclientplugins.parametricfittingstep/mapclientplugins/parametricfittingstep/core')
+from RigidFitting import RigidFitting
+from DeformableFitting import DeformableFitting
 
 
 class MeshGeneratorWidget(QtGui.QWidget):
@@ -32,11 +44,25 @@ class MeshGeneratorWidget(QtGui.QWidget):
         self._populateFiducialMarkersComboBox()
         self._marker_mode_active = False
         self._have_images = False
+        self.position = None
         # self._populateAnnotationTree()
         meshTypeNames = self._generator_model.getAllMeshTypeNames()
         for meshTypeName in meshTypeNames:
             self._ui.meshType_comboBox.addItem(meshTypeName)
         self._makeConnections()
+
+        self._node_to_fit = {'apex': 46,
+                             'lv1': 68,
+                             'lv2': 79,
+                             'rv1': 111,
+                             'rv2': 117,
+                             'rv3': 63,
+                             'rv4': 74,
+                             'rb': 144,
+                             'rb1': 134,
+                             'lb': 157,
+                             'lb1': 150
+                             }
 
     def _graphicsInitialized(self):
         """
@@ -103,8 +129,9 @@ class MeshGeneratorWidget(QtGui.QWidget):
         self._ui.timeLoop_checkBox.clicked.connect(self._timeLoopClicked)
         self._ui.displayFiducialMarkers_checkBox.clicked.connect(self._displayFiducialMarkersClicked)
         self._ui.fiducialMarker_comboBox.currentIndexChanged.connect(self._fiducialMarkerChanged)
-        # self._ui.treeWidgetAnnotation.itemSelectionChanged.connect(self._annotationSelectionChanged)
-        # self._ui.treeWidgetAnnotation.itemChanged.connect(self._annotationItemChanged)
+        self._ui.fiducialMarkerTransform_pushButton_2.clicked.connect(self._calculateRigidTransform)
+        self._ui.fiducialMarkerTransform_pushButton_3.clicked.connect(
+            self._calculateNonRigidTransform)  # self._ui.treeWidgetAnnotation.itemSelectionChanged.connect(self._annotationSelectionChanged)  # self._ui.treeWidgetAnnotation.itemChanged.connect(self._annotationItemChanged)
 
     def _fiducialMarkerChanged(self):
         self._fiducial_marker_model.setActiveMarker(self._ui.fiducialMarker_comboBox.currentText())
@@ -226,7 +253,7 @@ class MeshGeneratorWidget(QtGui.QWidget):
 
     def _framesPerSecondValueChanged(self, value):
         self._model.setFramesPerSecond(value)
-        self._ui.timeValue_doubleSpinBox.setMaximum(self._plane_model.getFrameCount()/value)
+        self._ui.timeValue_doubleSpinBox.setMaximum(self._plane_model.getFrameCount() / value)
 
     def _fixImagePlaneClicked(self):
         self._plane_model.setImagePlaneFixed(self._ui.fixImagePlane_checkBox.isChecked())
@@ -259,7 +286,7 @@ class MeshGeneratorWidget(QtGui.QWidget):
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
-              child.widget().deleteLater()
+                child.widget().deleteLater()
         optionNames = self._generator_model.getMeshTypeOrderedOptionNames()
         for key in optionNames:
             value = self._generator_model.getMeshTypeOption(key)
@@ -359,6 +386,238 @@ class MeshGeneratorWidget(QtGui.QWidget):
         print(item.text(0))
         print(item.data(0, QtCore.Qt.UserRole + 1))
 
+    def _calculateRigidTransform(self):
+        """
+        Performs a rigid transformation of scaffold to fiducial landmarks and updates the view.
+
+        :return:
+        """
+
+        print
+        print('Rigid Fitting...')
+        print
+
+        fieldmodule, nodes = self._getFieldmoduleAndAllNodes()
+        node_value_array, coordinates = self._getNodeValueArrayAndCoordinates(fieldmodule, nodes)
+        cache = fieldmodule.createFieldcache()
+
+        fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
+        fiducial_marker_positions = np.array([
+            [-0.08378320041032739, 0.060020191975871384, -0.6624821566239206],
+            [0.031569907135766684, 0.007679908312357764, -0.45690192510382405],
+            [0.10025877161353991, -0.021277717915205052, -0.1899708861054778],
+            [-0.39645071642271734, 0.2129401665689472, -0.4968680795311444],
+            [-0.538519453504519, 0.2856339320621082, -0.21160289284989792],
+            [-0.3031422475589496, 0.16863751602454125, -0.45910690793069187],
+            [-0.3141388179601403, 0.1778349211632646, -0.20345438227174692],
+            [-0.45093644663685417, 0.2466547356686979, -0.005754280505576248],
+            [-0.27930466280608646, 0.16388375408230305, -0.020065259452618694],
+            [0.03039541184136718, 0.014243606953794785, -0.06449774186629487],
+            [-0.08027159569963116, 0.06771364158539495, -0.04873733748563988]
+        ])
+
+        """ computing rigid transformation parameters 1 """
+        _, transformation = self._rigidTransform(fiducial_marker_positions, node_value_array)
+        ridid_scale = transformation.s
+
+        """ scaling 1 """
+        scale = fieldmodule.createFieldConstant([ridid_scale, ridid_scale, ridid_scale])
+        newCoordinates = fieldmodule.createFieldMultiply(coordinates, scale)
+        fieldassignment = coordinates.createFieldassignment(newCoordinates)
+        fieldassignment.assign()
+
+        del fieldmodule
+        del nodes
+        del cache
+        del coordinates
+        del transformation
+        del ridid_scale
+        del scale
+        del newCoordinates
+        del fieldassignment
+
+        """ getting the nodal parameters """
+        fieldmodule, nodes = self._getFieldmoduleAndAllNodes()
+        _, coordinates = self._getNodeValueArrayAndCoordinates(fieldmodule, nodes)
+        cache = fieldmodule.createFieldcache()
+        node_set_array = self._getNodeNumpyArray(cache, fieldmodule, nodes, coordinates)
+
+        """ computing rigid transformation parameters 2 """
+        _, transformation = self._rigidTransform(fiducial_marker_positions, node_set_array)
+        rigid_rotation, rigid_translation, ridid_scale = transformation.R, transformation.t, transformation.s
+
+        """ finding the new node positions """
+        transformed_nodes = np.dot(node_set_array, np.transpose(rigid_rotation)) +\
+                            np.tile(np.transpose(rigid_translation), (node_set_array.shape[0], 1))
+
+        """ scaling 2 """
+        scale = fieldmodule.createFieldConstant([ridid_scale, ridid_scale, ridid_scale])
+        newCoordinates = fieldmodule.createFieldMultiply(coordinates, scale)
+        fieldassignment = coordinates.createFieldassignment(newCoordinates)
+        fieldassignment.assign()
+
+        """ setting the nodal parameters """
+        self._setNodeParams(cache, fieldmodule, nodes, coordinates, transformed_nodes, node_set_array)
+
+    def _calculateNonRigidTransform(self):
+        print
+        print('Non-Rigid Fitting...')
+        print
+
+        # fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
+        fiducial_marker_positions = np.array([
+            [-0.08378320041032739, 0.060020191975871384, -0.6624821566239206],
+            [0.031569907135766684, 0.007679908312357764, -0.45690192510382405],
+            [0.10025877161353991, -0.021277717915205052, -0.1899708861054778],
+            [-0.39645071642271734, 0.2129401665689472, -0.4968680795311444],
+            [-0.538519453504519, 0.2856339320621082, -0.21160289284989792],
+            [-0.3031422475589496, 0.16863751602454125, -0.45910690793069187],
+            [-0.3141388179601403, 0.1778349211632646, -0.20345438227174692],
+            [-0.45093644663685417, 0.2466547356686979, -0.005754280505576248],
+            [-0.27930466280608646, 0.16388375408230305, -0.020065259452618694],
+            [0.03039541184136718, 0.014243606953794785, -0.06449774186629487],
+            [-0.08027159569963116, 0.06771364158539495, -0.04873733748563988]
+        ])
+
+        """ getting the nodal parameters """
+        fieldmodule, nodes = self._getFieldmoduleAndAllNodes()
+        node_value_array, coordinates = self._getNodeValueArrayAndCoordinates(fieldmodule, nodes)
+        cache = fieldmodule.createFieldcache()
+        node_set_array = self._getNodeNumpyArray(cache, fieldmodule, nodes, coordinates)
+
+        """ computing non-rigid transformation parameters """
+        _, transformation = self._nonRigidTransform(fiducial_marker_positions, node_set_array)
+        transformed_nodes = node_set_array + np.dot(transformation.G, transformation.W)
+
+        """ setting the nodal parameters """
+        self._setNodeParams(cache, fieldmodule, nodes, coordinates, transformed_nodes, node_set_array, rigid=False)
+
+        del fieldmodule
+        del nodes
+        del cache
+        del coordinates
+        del transformation
+
+    def _getNodeValueArrayAndCoordinates(self, fm, nds):
+        """
+        Returns the nodal xyz values of a node set as np array. Also
+        returns the coordiate field.
+
+        :param fm: fieldmodule
+        :param nds: node set
+        :return: node values as np array, coordinate field
+        """
+        fieldmodule, nodes = fm, nds
+        reference_nodes_to_fit = self._node_to_fit
+        node_value_list = []
+
+        fieldmodule.beginChange()
+        coordinates = getOrCreateCoordinateField(fieldmodule)
+        cache = fieldmodule.createFieldcache()
+        for n in range(len(reference_nodes_to_fit)):
+            id = list(reference_nodes_to_fit.keys())[n]
+            node = nodes.findNodeByIdentifier(reference_nodes_to_fit[id])
+            cache.setNode(node)
+            _, xyz = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, 3)
+            #     # _, dx_ds1 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS1, 1, 3)  # dx/ds1
+            #     # dx1.append(dx_ds1)
+            #     # _, dx_ds2 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS2, 1, 3)  # dx/ds2
+            #     # dx2.append(dx_ds2)
+            #     # _, dx_ds3 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS3, 1, 3)  # dx/ds3
+            #     # dx3.append(dx_ds3)
+
+            node_value_list.append(xyz)
+        del cache
+        fieldmodule.endChange()
+        return np.asarray(node_value_list), coordinates
+
+    def _getFieldmoduleAndAllNodes(self):
+        """
+
+        :return: fieldmodule, node set
+        """
+        from opencmiss.zinc.field import Field
+
+        region = self._generator_model._region
+        fieldmodule = region.getFieldmodule()
+        nodes = fieldmodule.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        return fieldmodule, nodes
+
+    def _getNodeNumpyArray(self, c, fm, n, coor):
+        cache, fieldmodule, nodes, coordinates = c, fm, n, coor
+
+        fieldmodule.beginChange()
+        node_iter = nodes.createNodeiterator()
+        node = node_iter.next()
+        node_set_list = []
+        while node.isValid():
+            cache.setNode(node)
+            _, xyz = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, 3)  # coordinates
+            node_set_list.append(xyz)
+            node = node_iter.next()
+        fieldmodule.endChange()
+        return np.asarray(node_set_list)
+
+    def _setNodeParams(self, c, fm, n, coor, t_n, narray, rigid=True):
+        """
+
+        :param c: cache
+        :param fm: fieldmodule
+        :param n: nodeset
+        :param coor: coordinates
+        :param t_n: transformed node - numpy array
+        :return:
+        """
+        cache, fieldmodule, nodes, coordinates, transformed_nodes = c, fm, n, coor, t_n
+
+        fieldmodule.beginChange()
+        node_iter = nodes.createNodeiterator()
+        node = node_iter.next()
+
+        for n in range(len(transformed_nodes)):
+            n_list = transformed_nodes[n].tolist()
+            cache.setNode(node)
+            if not rigid:
+                # new_n_list = []
+                # new_n_list.append(narray[n][0])
+                # new_n_list.append(n_list[0])
+                # new_n_list.append(n_list[1])
+                result = coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, n_list)
+            else:
+                result = coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, n_list)
+            if result == ZINC_OK:
+                pass
+            else:
+                break
+            node = node_iter.next()
+
+        fieldmodule.endChange()
+        return None
+
+    def _rigidTransform(self, landmark, node):
+        """
+
+        :param landmark: a numpy array of fiducial landmark points on the image
+        :param node: a numpy array selected nodes to compute the transform
+        :return: transformed nodes
+        """
+        fitting = RigidFitting(**{'X': landmark, 'Y': node})
+        TY, _ = fitting.fit()
+
+        return TY, fitting
+
+    def _nonRigidTransform(self, landmark, node):
+        """
+
+        :param landmark: a numpy array of fiducial landmark points on the image
+        :param node: a numpy array selected nodes to compute the transform
+        :return: transformed nodes
+        """
+        fitting = DeformableFitting(**{'X': landmark, 'Y': node})
+        TY, _ = fitting.fit()
+
+        return TY, fitting
+
     def _viewAll(self):
         """
         Ask sceneviewer to show all of scene.
@@ -371,7 +630,8 @@ class MeshGeneratorWidget(QtGui.QWidget):
             self._marker_mode_active = True
             self._ui.sceneviewer_widget._model = self._fiducial_marker_model
             self._original_mousePressEvent = self._ui.sceneviewer_widget.mousePressEvent
-            self._ui.sceneviewer_widget._calculatePointOnPlane = types.MethodType(_calculatePointOnPlane, self._ui.sceneviewer_widget)
+            self._ui.sceneviewer_widget._calculatePointOnPlane = types.MethodType(_calculatePointOnPlane,
+                                                                                  self._ui.sceneviewer_widget)
             self._ui.sceneviewer_widget.mousePressEvent = types.MethodType(mousePressEvent, self._ui.sceneviewer_widget)
             self._model.printLog()
 
