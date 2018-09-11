@@ -10,7 +10,7 @@ from opencmiss.zinc.field import Field
 from opencmiss.zinc.glyph import Glyph
 from opencmiss.zinc.graphics import Graphics
 from opencmiss.zinc.node import Node
-from scaffoldmaker.scaffoldmaker import Scaffoldmaker
+from scaffoldmaker.scaffoldmakers import Scaffoldmaker
 
 from mapclientplugins.meshgeneratorstep.model.meshalignmentmodel import MeshAlignmentModel
 
