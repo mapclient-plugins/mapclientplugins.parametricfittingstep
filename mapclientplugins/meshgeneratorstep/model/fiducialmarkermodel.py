@@ -2,9 +2,13 @@ from opencmiss.zinc.field import Field
 from opencmiss.zinc.glyph import Glyph
 
 from opencmiss.utils.zinc import createFiniteElementField
+from scaffoldmaker.utils.zinc_utils import *
 
 
-FIDUCIAL_MARKER_LABELS = ['LV apex', 'RV apex', 'LAD CFX junction', 'RV wall extent']
+# FIDUCIAL_MARKER_LABELS = ['LV apex', 'RV apex', 'LAD CFX junction', 'RV wall extent']
+FIDUCIAL_MARKER_LABELS = []
+for i in range(11):
+    FIDUCIAL_MARKER_LABELS.append(str(i+1))
 
 
 class FiducialMarkerModel(object):
@@ -17,6 +21,8 @@ class FiducialMarkerModel(object):
                           'active-marker-label': FIDUCIAL_MARKER_LABELS[0]}
         self._clear()
         self._reset()
+
+        self.position = []
 
     def registerGetPlaneInfoMethod(self, method):
         self._get_plane_info = method
@@ -48,6 +54,11 @@ class FiducialMarkerModel(object):
     def setNodeLocation(self, position):
         marker = self._markers[self._settings['active-marker-label']]
         marker.setPosition(position)
+
+        self.position.append(position)
+
+    def getNodeLocation(self):
+        return self.position
 
     def _clear(self):
         self._region = None
@@ -122,5 +133,6 @@ class FiducialMarker(object):
         self._fieldmodule.beginChange()
         fieldcache.setNode(self._node)
         self._coordinate_field.assignReal(fieldcache, position)
+        print(position)
         # self._label_field.assignString(fieldcache, self._label)
         self._fieldmodule.endChange()
