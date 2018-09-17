@@ -70,6 +70,8 @@ class MeshGeneratorWidget(QtGui.QWidget):
         self._node_to_fit = {'apex': 46, 'lv1': 68, 'lv2': 79, 'rv1': 111, 'rv2': 117, 'rv3': 63, 'rv4': 74, 'rb': 144,
                              'rb1': 134, 'lb': 157, 'lb1': 150}
 
+        self.fiducial_marker_positions = None
+
     def _graphicsInitialized(self):
         """
         Callback for when SceneviewerWidget is initialised
@@ -392,6 +394,8 @@ class MeshGeneratorWidget(QtGui.QWidget):
         print(item.text(0))
         print(item.data(0, QtCore.Qt.UserRole + 1))
 
+    """ Beginning of Mahyar's code: """
+
     def _calculateRigidTransform(self):
         """
         Performs a rigid transformation of scaffold to fiducial landmarks and updates the view.
@@ -407,34 +411,12 @@ class MeshGeneratorWidget(QtGui.QWidget):
         node_value_array, coordinates = self._getNodeValueArrayAndCoordinates(fieldmodule, nodes)
         cache = fieldmodule.createFieldcache()
 
-        # fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
-        fiducial_marker_positions = np.array([# [-0.08378320041032739, 0.060020191975871384, -0.6624821566239206],
-            # [0.031569907135766684, 0.007679908312357764, -0.45690192510382405],
-            # [0.10025877161353991, -0.021277717915205052, -0.1899708861054778],
-            # [-0.39645071642271734, 0.2129401665689472, -0.4968680795311444],
-            # [-0.538519453504519, 0.2856339320621082, -0.21160289284989792],
-            # [-0.3031422475589496, 0.16863751602454125, -0.45910690793069187],
-            # [-0.3141388179601403, 0.1778349211632646, -0.20345438227174692],
-            # [-0.45093644663685417, 0.2466547356686979, -0.005754280505576248],
-            # [-0.27930466280608646, 0.16388375408230305, -0.020065259452618694],
-            # [0.03039541184136718, 0.014243606953794785, -0.06449774186629487],
-            # [-0.08027159569963116, 0.06771364158539495, -0.04873733748563988]
-        [-0.00185130586563087, 0.02014437569480032, -0.6930864216685104],
-        [0.16726735467477938, -0.057467425940428196, -0.4489856949630478],
-        [0.15164180124034088, -0.04558319230271746, -0.16321920523491512],
-        [0.11913537315196265, -0.028436558536795165, -0.06434276579316178],
-        [-0.3981724786424108, 0.21375016245879674, -0.4980550045833302],
-        [-0.5178401893040329, 0.275967953790734, -0.1932592096318814],
-        [-0.4282651966143486, 0.23619796011707628, 0.02353425298619749],
-        [-0.28077328623803677, 0.15808500306750117, -0.44559187130116923],
-        [-0.32922047697142653, 0.18548704074526645, -0.17741457658734572],
-        [-0.2581494182460182, 0.15390004646864242, -0.0075296953943526646],
-        [-0.002717050948245703, 0.030417249846416805, -0.04833619687679752]
-
-        ])
+        if self.fiducial_marker_positions is not None:
+            self.fiducial_marker_positions = None
+            self.fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
 
         """ computing rigid transformation parameters 1 """
-        _, transformation = self._rigidTransform(fiducial_marker_positions, node_value_array)
+        _, transformation = self._rigidTransform(self.fiducial_marker_positions, node_value_array)
         ridid_scale = transformation.s
 
         """ scaling 1 """
@@ -460,7 +442,7 @@ class MeshGeneratorWidget(QtGui.QWidget):
         node_set_array = self._getNodeNumpyArray(cache, fieldmodule, nodes, coordinates)
 
         """ computing rigid transformation parameters 2 """
-        _, transformation = self._rigidTransform(fiducial_marker_positions, node_set_array)
+        _, transformation = self._rigidTransform(self.fiducial_marker_positions, node_set_array)
         rigid_rotation, rigid_translation, ridid_scale = transformation.R, transformation.t, transformation.s
 
         """ finding the new node positions """
@@ -481,30 +463,9 @@ class MeshGeneratorWidget(QtGui.QWidget):
         print('Non-Rigid Fitting...')
         print
 
-        # fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
-        fiducial_marker_positions = np.array([
-            # [-0.08378320041032739, 0.060020191975871384, -0.6624821566239206],
-            # [0.031569907135766684, 0.007679908312357764, -0.45690192510382405],
-            # [0.10025877161353991, -0.021277717915205052, -0.1899708861054778],
-            # [-0.39645071642271734, 0.2129401665689472, -0.4968680795311444],
-            # [-0.538519453504519, 0.2856339320621082, -0.21160289284989792],
-            # [-0.3031422475589496, 0.16863751602454125, -0.45910690793069187],
-            # [-0.3141388179601403, 0.1778349211632646, -0.20345438227174692],
-            # [-0.45093644663685417, 0.2466547356686979, -0.005754280505576248],
-            # [-0.27930466280608646, 0.16388375408230305, -0.020065259452618694],
-            # [0.03039541184136718, 0.014243606953794785, -0.06449774186629487],
-            # [-0.08027159569963116, 0.06771364158539495, -0.04873733748563988]
-            [-0.00185130586563087, 0.02014437569480032, -0.6930864216685104],
-            [0.16726735467477938, -0.057467425940428196, -0.4489856949630478],
-            [0.15164180124034088, -0.04558319230271746, -0.16321920523491512],
-            [0.11913537315196265, -0.028436558536795165, -0.06434276579316178],
-            [-0.3981724786424108, 0.21375016245879674, -0.4980550045833302],
-            [-0.5178401893040329, 0.275967953790734, -0.1932592096318814],
-            [-0.4282651966143486, 0.23619796011707628, 0.02353425298619749],
-            [-0.28077328623803677, 0.15808500306750117, -0.44559187130116923],
-            [-0.32922047697142653, 0.18548704074526645, -0.17741457658734572],
-            [-0.2581494182460182, 0.15390004646864242, -0.0075296953943526646],
-            [-0.002717050948245703, 0.030417249846416805, -0.04833619687679752]])
+        if self.fiducial_marker_positions is not None:
+            self.fiducial_marker_positions = None
+            self.fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
 
         """ getting the nodal parameters """
         fieldmodule, nodes = self._getFieldmoduleAndAllNodes()
@@ -513,7 +474,7 @@ class MeshGeneratorWidget(QtGui.QWidget):
         node_set_array = self._getNodeNumpyArray(cache, fieldmodule, nodes, coordinates)
 
         """ computing non-rigid transformation parameters """
-        _, transformation = self._nonRigidTransform(fiducial_marker_positions[:, 1:3], node_set_array[:, 1:3])
+        _, transformation = self._nonRigidTransform(self.fiducial_marker_positions[:, 1:3], node_set_array[:, 1:3])
         transformed_nodes = node_set_array[:, 1:3] + np.dot(transformation.G, transformation.W)
 
         """ setting the nodal parameters """
@@ -546,13 +507,6 @@ class MeshGeneratorWidget(QtGui.QWidget):
             node = nodes.findNodeByIdentifier(reference_nodes_to_fit[id])
             cache.setNode(node)
             _, xyz = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, 3)
-            #     # _, dx_ds1 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS1, 1, 3)  # dx/ds1
-            #     # dx1.append(dx_ds1)
-            #     # _, dx_ds2 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS2, 1, 3)  # dx/ds2
-            #     # dx2.append(dx_ds2)
-            #     # _, dx_ds3 = coordinates.getNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS3, 1, 3)  # dx/ds3
-            #     # dx3.append(dx_ds3)
-
             node_value_list.append(xyz)
         del cache
         fieldmodule.endChange()
@@ -644,6 +598,8 @@ class MeshGeneratorWidget(QtGui.QWidget):
         TY, _ = fitting.fit()
 
         return TY, fitting
+
+    """ End of Mahyar's code """
 
     def _viewAll(self):
         """
