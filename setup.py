@@ -1,7 +1,6 @@
-from setuptools import setup, find_packages
-from setuptools.command.install import install
 import os
 import io
+from setuptools import setup, find_packages
 
 SETUP_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,23 +14,18 @@ def readfile(filename, split=False):
             return stream.read().split("\n")
         return stream.read()
 
+
 readme = readfile("README.rst", split=True)[3:]  # skip title
+
 # For requirements not hosted on PyPi place listings
 # into the 'requirements.txt' file.
-requires = ['git+https://github.com/scardine/image_size']  # minimal requirements listing
+requires = ['get-image-size',
+            'numpy']  # minimal requirements listing
 source_license = readfile("LICENSE")
 
 
-class InstallCommand(install):
-
-    def run(self):
-        install.run(self)
-        # Automatically install requirements from requirements.txt
-        import subprocess
-        subprocess.call(['pip', 'install', '-r', os.path.join(SETUP_DIR, 'requirements.txt')])
-
-
-setup(name='mapclientplugins.meshgeneratorstep',
+setup(
+    name='mapclientplugins.parametricfittingstep',
     version='0.1.0',
     description='',
     long_description='\n'.join(readme) + source_license,
@@ -40,9 +34,8 @@ setup(name='mapclientplugins.meshgeneratorstep',
       "License :: OSI Approved :: Apache Software License",
       "Programming Language :: Python",
     ],
-    cmdclass={'install': InstallCommand,},
-    author='Richard Christie',
-    author_email='',
+    author='Mahyar Osanlouy',
+    author_email='m.osanlouy@auckland.ac.nz',
     url='',
     license='APACHE',
     packages=find_packages(exclude=['ez_setup',]),
@@ -50,4 +43,4 @@ setup(name='mapclientplugins.meshgeneratorstep',
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
-    )
+)
