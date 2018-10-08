@@ -23,7 +23,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         self._configured = False # A step cannot be executed until it has been configured.
         self._category = 'Fitting'
         # Add any other initialisation code here:
-        self._icon =  QtGui.QImage(':/parametricfitting/images/model-viewer.png')
+        # self._icon =  QtGui.QImage(':/parametricfitting/images/model-viewer.png')
         # Ports:
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#provides',
@@ -33,14 +33,13 @@ class ParametricFittingStep(WorkflowStepMountPoint):
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#image_context_data'))
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
-                      'http://physiomeproject.org/workflow/1.0/rdf-schema#time_labelled_nodal_locations'))
+                      'http://physiomeproject.org/workflow/1.0/rdf-schema#time_labelled_fiducial_marker_locations'))
         # Port data:
         self._portData0 = None # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
-        self._images_info = None
+        self._image_context_data = None
+        self._time_labelled_nodal_locations = None
         # Config:
-        self._config = {}
-        self._config['identifier'] = ''
-        self._config['AutoDone'] = False
+        self._config = {'identifier': '', 'AutoDone': False}
         self._model = None
         self._view = None
 
@@ -49,15 +48,15 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         Kick off the execution of the step, in this case an interactive dialog.
         User invokes the _doneExecution() method when finished, via pushbutton.
         """
-        self._model = MasterModel(self._location, self._config['identifier'])
+        self._model = MasterModel(self._location, self._config['identifier'],
+                                  self._image_context_data, self._time_labelled_nodal_locations)
         self._view = ParametricFittingWidget(self._model)
-        self._view.setImageInfo(self._images_info)
         # self._view.setWindowFlags(QtCore.Qt.Widget)
-        self._view.registerDoneExecution(self._myDoneExecution)
+        self._view.register_done_execution(self._myDoneExecution)
         self._setCurrentWidget(self._view)
 
     def _myDoneExecution(self):
-        self._portData0 = self._model.getOutputModelFilename()
+        self._portData0 = self._model.get_output_model_file_name()
         self._view = None
         self._model = None
         self._doneExecution()
@@ -73,7 +72,10 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         return self._portData0 # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
 
     def setPortData(self, index, data):
-        self._images_info = data
+        if index == 1:
+            self._image_context_data = data
+        elif index == 2:
+            self._time_labelled_nodal_locations = data
 
     def configure(self):
         """
