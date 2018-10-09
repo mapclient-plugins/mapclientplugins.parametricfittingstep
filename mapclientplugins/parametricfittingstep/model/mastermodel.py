@@ -9,6 +9,9 @@ from mapclientplugins.parametricfittingstep.model.fiducialmarkers import Fiducia
 from mapclientplugins.parametricfittingstep.scene.fiducialmarkers import FiducialMarkers as FiducialMarkersScene
 from mapclientplugins.parametricfittingstep.model.imageplane import ImagePlane as ImagePlaneModel
 from mapclientplugins.parametricfittingstep.scene.imageplane import ImagePlane as ImagePlaneScene
+from mapclientplugins.parametricfittingstep.model.scaffold import Scaffold as ScaffoldModel
+from mapclientplugins.parametricfittingstep.scene.scaffold import Scaffold as ScaffoldScene
+
 
 TIME_LOOP_KEY = 'time_loop'
 
@@ -17,7 +20,7 @@ class MasterModel(QtCore.QObject):
 
     time_stopped = QtCore.Signal()
 
-    def __init__(self, location, identifier, image_context_data, fitting_point_data):
+    def __init__(self, location, identifier, image_context_data, fitting_point_data, scaffold):
         super(MasterModel, self).__init__()
         self._location = location
         self._identifier = identifier
@@ -27,6 +30,9 @@ class MasterModel(QtCore.QObject):
         self._fiducial_markers_model = FiducialMarkersModel(self)
         self._fiducial_markers_model.set_data(fitting_point_data)
         self._fiducial_markers_model.set_data_to_context()
+        self._scaffold_model = ScaffoldModel(self)
+        self._scaffold_model.set_scaffold(scaffold)
+        self._scaffold_model.generate_mesh()
 
         self._timekeeper = self._context.getTimekeepermodule().getDefaultTimekeeper()
         self._timer = QtCore.QTimer()
@@ -46,6 +52,9 @@ class MasterModel(QtCore.QObject):
 
         self._fiducial_marker_scene = FiducialMarkersScene(self)
         self._fiducial_marker_scene.create_graphics()
+
+        self._scaffold_scene = ScaffoldScene(self)
+        self._scaffold_scene.create_graphics()
 
         self._settings = {TIME_LOOP_KEY: False}
         self._make_connections()
@@ -126,6 +135,9 @@ class MasterModel(QtCore.QObject):
 
     def get_fiducial_markers_model(self):
         return self._fiducial_markers_model
+
+    def get_scaffold_model(self):
+        return self._scaffold_model
 
     def get_frames_per_second(self):
         return self._frames_per_second

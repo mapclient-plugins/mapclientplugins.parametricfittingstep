@@ -6,6 +6,8 @@ import json
 
 from PySide import QtGui
 
+from scaffoldmaker.scaffolds import Scaffolds
+
 from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint
 from mapclientplugins.parametricfittingstep.configuredialog import ConfigureDialog
 from mapclientplugins.parametricfittingstep.model.mastermodel import MasterModel
@@ -34,10 +36,14 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#time_labelled_fiducial_marker_locations'))
+        self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
+                      'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
+                      'http://physiomeproject.org/workflow/1.0/rdf-schema#scaffold_description'))
         # Port data:
         self._portData0 = None # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
         self._image_context_data = None
         self._time_labelled_nodal_locations = None
+        self._scaffold_description = '3D Heart Ventricles with Base 1'
         # Config:
         self._config = {'identifier': '', 'AutoDone': False}
         self._model = None
@@ -48,8 +54,15 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         Kick off the execution of the step, in this case an interactive dialog.
         User invokes the _doneExecution() method when finished, via pushbutton.
         """
+        sc = Scaffolds()
+        active_mesh = None
+        for mesh_type in sc.getMeshTypes():
+            if mesh_type.getName() == '3D Heart Ventricles with Base 1':
+                active_mesh = mesh_type
+
         self._model = MasterModel(self._location, self._config['identifier'],
-                                  self._image_context_data, self._time_labelled_nodal_locations)
+                                  self._image_context_data, self._time_labelled_nodal_locations,
+                                  active_mesh)
         self._view = ParametricFittingWidget(self._model)
         # self._view.setWindowFlags(QtCore.Qt.Widget)
         self._view.register_done_execution(self._myDoneExecution)
@@ -76,6 +89,9 @@ class ParametricFittingStep(WorkflowStepMountPoint):
             self._image_context_data = data
         elif index == 2:
             self._time_labelled_nodal_locations = data
+        elif index == 3:
+            print('index is three@@@@@@'
+            )
 
     def configure(self):
         """
