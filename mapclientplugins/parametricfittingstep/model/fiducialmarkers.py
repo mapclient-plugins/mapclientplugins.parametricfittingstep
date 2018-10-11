@@ -1,3 +1,4 @@
+import math
 
 from opencmiss.utils.zinc import create_node, create_finite_element_field, AbstractNodeDataObject
 
@@ -71,3 +72,33 @@ class FiducialMarkers(Base):
         field_cache.setNode(node)
         self._coordinate_field.assignReal(field_cache, location)
         field_module.endChange()
+
+    def get_node_locations(self):
+        locations = []
+        index = 0
+        for key in self._fiducial_marker_data:
+            if key != 'time_array':
+                point_location = self._fiducial_marker_data[key][index]
+                locations.append(point_location)
+
+        return locations
+
+    def calculate_extents(self):
+        index = 0
+        min_x = math.inf
+        max_x = -math.inf
+        min_y = math.inf
+        max_y = -math.inf
+        for key in self._fiducial_marker_data:
+            if key != 'time_array':
+                point_location = self._fiducial_marker_data[key][index]
+                if point_location[0] < min_x:
+                    min_x = point_location[0]
+                if point_location[0] > max_x:
+                    max_x = point_location[0]
+                if point_location[1] < min_y:
+                    min_y = point_location[1]
+                if point_location[1] > max_y:
+                    max_y = point_location[1]
+
+        return min_x, max_x, min_y, max_y

@@ -11,6 +11,8 @@ class FiducialMarkers(object):
     def create_graphics(self):
         fiducial_markers_model = self._master_model.get_fiducial_markers_model()
         coordinate_field = fiducial_markers_model.get_coordinate_field()
+        field_module = coordinate_field.getFieldmodule()
+        cmiss_number = field_module.findFieldByName('cmiss_number')
         region = fiducial_markers_model.get_region()
         scene = region.getScene()
         scene.beginChange()
@@ -29,6 +31,7 @@ class FiducialMarkers(object):
         attributes = points.getGraphicspointattributes()
         attributes.setGlyphShapeType(Glyph.SHAPE_TYPE_SPHERE)
         attributes.setBaseSize(5.7)
+        attributes.setLabelField(cmiss_number)
 
         # scene.setSelectionField(fiducial_markers_model.get_selection_field())
         scene.endChange()

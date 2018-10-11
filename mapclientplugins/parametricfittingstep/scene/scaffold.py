@@ -1,3 +1,4 @@
+from opencmiss.zinc.field import Field
 from opencmiss.zinc.graphics import Graphics
 
 
@@ -12,9 +13,18 @@ class Scaffold(object):
         scene = region.getScene()
         material_module = scene.getMaterialmodule()
         coordinate_field = scaffold_model.get_coordinate_field()
+        field_module = coordinate_field.getFieldmodule()
+        cmiss_number = field_module.findFieldByName('cmiss_number')
 
         scene.beginChange()
         scene.removeAllGraphics()
+
+        points = scene.createGraphicsPoints()
+        points.setName('scaffold-points')
+        points.setCoordinateField(coordinate_field)
+        points.setFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        attributes = points.getGraphicspointattributes()
+        attributes.setLabelField(cmiss_number)
 
         lines = scene.createGraphicsLines()
         lines.setExterior(True)

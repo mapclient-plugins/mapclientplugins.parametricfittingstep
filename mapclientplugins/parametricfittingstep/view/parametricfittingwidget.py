@@ -32,10 +32,14 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._setup_handlers()
         self._make_connections()
 
-        self._node_to_fit = {'apex': 46, 'lv1': 68, 'lv2': 79, 'rv1': 111, 'rv2': 117, 'rv3': 63, 'rv4': 74, 'rb': 144,
-                             'rb1': 134, 'lb': 157, 'lb1': 150}
+        self._node_to_fit = {'lv_apex': 62, 'rv_apex': 166,
+                             'lv1': 85, 'lv2': 109,
+                             'sept1': 91, 'sept2': 103,
+                             'rv1': 175, 'rv2': 183,
+                             'rb1': 255, 'rb2': 210,
+                             'lb1': 228, 'lb2': 234}
 
-        self.fiducial_marker_positions = None
+        self._fiducial_marker_positions = None
 
     def _graphics_initialized(self):
         """
@@ -57,6 +61,9 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._ui.timePlayStop_pushButton.clicked.connect(self._time_play_stop_clicked)
         self._ui.timeLoop_checkBox.clicked.connect(self._time_loop_clicked)
         self._model.time_stopped.connect(self._time_play_stop_clicked)
+        self._ui.fittingScale_pushButton.clicked.connect(self._perform_scaffold_scale)
+        self._ui.fittingFitRigidly_pushButton.clicked.connect(self._calculate_rigid_transform)
+        self._ui.fittingFitNonRigidly_pushButton.clicked.connect(self._calculate_non_rigid_transform)
 
     def _setup_handlers(self):
         basic_handler = SceneManipulation()
@@ -109,88 +116,89 @@ class ParametricFittingWidget(QtGui.QWidget):
     def _refresh_options(self):
         pass
 
+    def _perform_scaffold_scale(self):
+        # Can we get the maximum x and y extents and minimum x and y extents.
+        # Assumption: The image plane is at z = 0.
+        fiducial_markers_model = self._model.get_fiducial_markers_model()
+        scaffold_model = self._model.get_scaffold_model()
+        min_x, max_x, min_y, max_y = fiducial_markers_model.calculate_extents()
+        approximate_width = max_x - min_x
+        approximate_height = max_y - min_y
+        # Create scaled scaffold to these approximations
+        scaffold_model.scale(approximate_width, approximate_height)
+        self._model.recreate_scaffold_graphics()
+
     def _calculate_rigid_transform(self):
         """
         Performs a rigid transformation of scaffold to fiducial landmarks and updates the view.
 
         :return:
         """
-
-        print()
-        print('Rigid Fitting...')
-        print()
-
         field_module, nodes = self._get_field_module_and_all_nodes()
         node_value_array, coordinates = self._get_node_value_array_and_coordinates(field_module, nodes)
         cache = field_module.createFieldcache()
 
-        if self.fiducial_marker_positions is not None:
-            self.fiducial_marker_positions = None
-            self.fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
+        fiducial_markers_model = self._model.get_fiducial_markers_model()
+        fiducial_marker_positions = np.asarray(fiducial_markers_model.get_node_locations())
 
         """ computing rigid transformation parameters 1 """
-        _, transformation = self._rigid_transform(self.fiducial_marker_positions, node_value_array)
-        ridid_scale = transformation.s
+        _, transformation = _rigid_transform(fiducial_marker_positions, node_value_array)
+        rigid_scale = transformation.s
 
         """ scaling 1 """
-        scale = field_module.createFieldConstant([ridid_scale, ridid_scale, ridid_scale])
-        newCoordinates = field_module.createFieldMultiply(coordinates, scale)
-        fieldassignment = coordinates.createFieldassignment(newCoordinates)
-        fieldassignment.assign()
+        scale = field_module.createFieldConstant([rigid_scale, rigid_scale, rigid_scale])
+        new_coordinates = field_module.createFieldMultiply(coordinates, scale)
+        field_assignment = coordinates.createFieldassignment(new_coordinates)
+        field_assignment.assign()
 
-        del field_module
-        del nodes
-        del cache
-        del coordinates
-        del transformation
-        del ridid_scale
-        del scale
-        del newCoordinates
-        del fieldassignment
+        # del field_module
+        # del nodes
+        # del cache
+        # del coordinates
+        # del transformation
+        # del rigid_scale
+        # del scale
+        # del new_coordinates
+        # del field_assignment
 
         """ getting the nodal parameters """
         _, coordinates = self._get_node_value_array_and_coordinates(field_module, nodes)
         cache = field_module.createFieldcache()
-        node_set_array = self._get_node_numpy_array(cache, field_module, nodes, coordinates)
+        node_set_array = _get_node_numpy_array(cache, field_module, nodes, coordinates)
 
         """ computing rigid transformation parameters 2 """
-        _, transformation = self._rigid_transform(self.fiducial_marker_positions, node_set_array)
-        rigid_rotation, rigid_translation, ridid_scale = transformation.R, transformation.t, transformation.s
+        _, transformation = _rigid_transform(fiducial_marker_positions, node_set_array)
+        rigid_rotation, rigid_translation, rigid_scale = transformation.R, transformation.t, transformation.s
 
         """ finding the new node positions """
         transformed_nodes = np.dot(node_set_array, np.transpose(rigid_rotation)) + np.tile(
             np.transpose(rigid_translation), (node_set_array.shape[0], 1))
 
         """ scaling 2 """
-        scale = field_module.createFieldConstant([ridid_scale, ridid_scale, ridid_scale])
-        newCoordinates = field_module.createFieldMultiply(coordinates, scale)
-        fieldassignment = coordinates.createFieldassignment(newCoordinates)
-        fieldassignment.assign()
+        scale = field_module.createFieldConstant([rigid_scale, rigid_scale, rigid_scale])
+        new_coordinates = field_module.createFieldMultiply(coordinates, scale)
+        field_assignment = coordinates.createFieldassignment(new_coordinates)
+        field_assignment.assign()
 
         """ setting the nodal parameters """
-        self._set_node_params(cache, field_module, nodes, coordinates, transformed_nodes, node_set_array)
+        _set_node_parameters(cache, field_module, nodes, coordinates, transformed_nodes, node_set_array)
 
     def _calculate_non_rigid_transform(self):
-        print()
-        print('Non-Rigid Fitting...')
-        print()
-
-        if self.fiducial_marker_positions is not None:
-            self.fiducial_marker_positions = None
-            self.fiducial_marker_positions = np.asarray(self._fiducial_marker_model.getNodeLocation())
+        fiducial_markers_model = self._model.get_fiducial_markers_model()
+        fiducial_marker_positions = np.asarray(fiducial_markers_model.get_node_locations())
 
         """ getting the nodal parameters """
         field_module, nodes = self._get_field_module_and_all_nodes()
         node_value_array, coordinates = self._get_node_value_array_and_coordinates(field_module, nodes)
         cache = field_module.createFieldcache()
-        node_set_array = self._get_node_numpy_array(cache, field_module, nodes, coordinates)
+        node_set_array = _get_node_numpy_array(cache, field_module, nodes, coordinates)
 
         """ computing non-rigid transformation parameters """
-        _, transformation = self._non_rigid_transform(self.fiducial_marker_positions[:, 1:3], node_set_array[:, 1:3])
+        _, transformation = _non_rigid_transform(fiducial_marker_positions[:, 1:3], node_set_array[:, 1:3])
         transformed_nodes = node_set_array[:, 1:3] + np.dot(transformation.G, transformation.W)
 
         """ setting the nodal parameters """
-        self._set_node_params(cache, field_module, nodes, coordinates, transformed_nodes, node_set_array, rigid=False)
+        _set_node_parameters(cache, field_module, nodes, coordinates, transformed_nodes, node_set_array, rigid=False)
 
         del field_module
         del nodes
@@ -211,7 +219,7 @@ class ParametricFittingWidget(QtGui.QWidget):
         node_value_list = []
 
         field_module.beginChange()
-        coordinate_field = field_module.findFieldByName('coordinates')
+        coordinate_field = field_module.findFieldByName('coordinates').castFiniteElement()
         cache = field_module.createFieldcache()
         for n in range(len(reference_nodes_to_fit)):
             id = list(reference_nodes_to_fit.keys())[n]
@@ -224,7 +232,8 @@ class ParametricFittingWidget(QtGui.QWidget):
         return np.asarray(node_value_list), coordinate_field
 
     def _get_field_module_and_all_nodes(self):
-        region = self._generator_model.get_region()
+        scaffold_model = self._model.get_scaffold_model()
+        region = scaffold_model.get_region()
         field_module = region.getFieldmodule()
         nodes = field_module.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
         return field_module, nodes
@@ -254,7 +263,7 @@ def _get_node_numpy_array(field_cache, field_module, nodes, coordinates):
     return np.asarray(node_set_list)
 
 
-def _set_node_params(field_cache, field_module, nodes, coordinates, transformed_nodes, numpy_array, rigid=True):
+def _set_node_parameters(field_cache, field_module, nodes, coordinates, transformed_nodes, numpy_array, rigid=True):
 
     field_module.beginChange()
     node_iter = nodes.createNodeiterator()

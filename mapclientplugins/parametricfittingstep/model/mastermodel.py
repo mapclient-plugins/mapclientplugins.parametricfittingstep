@@ -112,6 +112,9 @@ class MasterModel(QtCore.QObject):
     def register_time_value_update_callback(self, time_value_update_callback):
         self._time_value_update = time_value_update_callback
 
+    def recreate_scaffold_graphics(self):
+        self._scaffold_scene.create_graphics()
+
     def get_identifier(self):
         return self._identifier
 

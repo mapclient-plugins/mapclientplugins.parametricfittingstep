@@ -14,6 +14,45 @@ from mapclientplugins.parametricfittingstep.model.mastermodel import MasterModel
 from mapclientplugins.parametricfittingstep.view.parametricfittingwidget import ParametricFittingWidget
 
 
+# Options for '3D Heart Ventricles with Base 2'
+# options = {'Number of elements around LV free wall': 5,
+#            'Number of elements around ventricular septum': 7,
+#            'Number of elements up LV apex': 1,
+#            'Number of elements up ventricular septum': 4,
+#            'LV outer height': 0.95,
+#            'LV outer radius': 0.5,
+#            'LV free wall thickness': 0.12,
+#            'LV apex thickness': 0.06,
+#            'RV inner height': 0.8,
+#            'RV arc around degrees': 200.0,
+#            'RV free wall thickness': 0.04,
+#            'RV width': 0.4,
+#            'RV extra cross radius base': 0.1,
+#            'Ventricular septum thickness': 0.1,
+#            'Ventricular septum base radial displacement': 0.15,
+#            'Use cross derivatives': False,
+#            'Refine': False,
+#            'Refine number of elements surface': 4,
+#            'Refine number of elements through LV wall': 1,
+#            'Refine number of elements through RV wall': 1,
+#            'Number of elements around atria': 8,
+#            'Atria base inner major axis length': 0.55,
+#            'Atria base inner minor axis length': 0.42,
+#            'Atria major axis rotation degrees': 40.0,
+#            'Atrial septum thickness': 0.06,
+#            'Atrial base wall thickness': 0.05,
+#            'Atrial base slope degrees': 30.0,
+#            'Base height': 0.12,
+#            'Base thickness': 0.06,
+#            'Fibrous ring thickness': 0.01,
+#            'LV outlet inner diameter': 0.3,
+#            'LV outlet wall thickness': 0.025,
+#            'RV outlet inner diameter': 0.27,
+#            'RV outlet wall thickness': 0.025,
+#            'Ventricles outlet element length': 0.1,
+#            'Ventricles outlet incline degrees': 15.0,
+#            'Ventricles outlet spacing': 0.04}
+
 class ParametricFittingStep(WorkflowStepMountPoint):
     """
     Skeleton step which is intended to be a helpful starting point
@@ -43,7 +82,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         self._portData0 = None # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
         self._image_context_data = None
         self._time_labelled_nodal_locations = None
-        self._scaffold_description = '3D Heart Ventricles with Base 1'
+        self._scaffold_description = '3D Heart Ventricles with Base 2'
         # Config:
         self._config = {'identifier': '', 'AutoDone': False}
         self._model = None
@@ -57,7 +96,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         sc = Scaffolds()
         active_mesh = None
         for mesh_type in sc.getMeshTypes():
-            if mesh_type.getName() == '3D Heart Ventricles with Base 1':
+            if mesh_type.getName() == '3D Heart Ventricles with Base 2':
                 active_mesh = mesh_type
 
         self._model = MasterModel(self._location, self._config['identifier'],

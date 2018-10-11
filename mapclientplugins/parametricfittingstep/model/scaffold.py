@@ -16,6 +16,7 @@ class Scaffold(Base):
         self._region = None
         self._region_name = 'scaffold'
         self._scaffold = None
+        self._scaffold_options = None
         self._coordinate_field = None
 
         self._initialise()
@@ -32,6 +33,7 @@ class Scaffold(Base):
 
     def set_scaffold(self, scaffold):
         self._scaffold = scaffold
+        self._scaffold_options = self._scaffold.getDefaultOptions()
 
     def is_display_surfaces_translucent(self):
         return self._settings[DISPLAY_SURFACES_TRANSLUCENT_KEY]
@@ -42,12 +44,34 @@ class Scaffold(Base):
     def get_region(self):
         return self._region
 
+    def _scale_width(self, width):
+        width_options = ['LV outer radius', 'LV free wall thickness', 'LV apex thickness',
+                         'RV width', 'RV extra cross radius base', 'Ventricular septum thickness',
+                         'Atria base inner major axis length', 'Atria base inner minor axis length',
+                         'Atrial septum thickness', 'Atrial base wall thickness',
+                         'LV outlet inner diameter', 'LV outlet wall thickness',
+                         'RV outlet inner diameter', 'RV outlet wall thickness']
+        for option in width_options:
+            self._scaffold_options[option] *= width
+
+    def _scale_height(self, height):
+        height_options = ['LV outer height', 'RV inner height', 'RV free wall thickness',
+                          'Base height', 'Base thickness', 'Fibrous ring thickness',
+                          'Ventricles outlet element length', 'Ventricles outlet spacing']
+        for option in height_options:
+            self._scaffold_options[option] *= height
+
+    def scale(self, width, height):
+        self._scale_width(width * 0.8)
+        self._scale_height(height * 0.8)
+        self.generate_mesh()
+
     def generate_mesh(self):
         self._initialise_region()
-        self._scene = self._region.getScene()
+        # self._scene = self._region.getScene()
         field_module = self._region.getFieldmodule()
         field_module.beginChange()
-        self._scaffold.generateMesh(self._region, self._scaffold.getDefaultOptions())
+        self._scaffold.generateMesh(self._region, self._scaffold_options)
         # logger = self._context.getLogger()
         # annotationGroups = self._currentMeshType.generateMesh(self._region, self._scaffold.getDefaultOptions())
         # loggerMessageCount = logger.getNumberOfMessages()

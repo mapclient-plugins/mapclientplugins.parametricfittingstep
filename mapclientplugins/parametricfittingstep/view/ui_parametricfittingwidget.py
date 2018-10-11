@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mapclientplugins\parametricfittingstep\qt\parametricfittingwidget.ui'
 #
-# Created: Thu Oct  4 12:54:31 2018
+# Created: Wed Oct 10 12:22:14 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -80,16 +80,22 @@ class Ui_ParametricFittingWidget(object):
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.fittingRigid_label = QtGui.QLabel(self.fitting_groupBox)
         self.fittingRigid_label.setObjectName("fittingRigid_label")
-        self.gridLayout_3.addWidget(self.fittingRigid_label, 0, 0, 1, 1)
-        self.fittingNonRigid_label = QtGui.QLabel(self.fitting_groupBox)
-        self.fittingNonRigid_label.setObjectName("fittingNonRigid_label")
-        self.gridLayout_3.addWidget(self.fittingNonRigid_label, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.fittingRigid_label, 2, 0, 1, 1)
+        self.fittingScale_label = QtGui.QLabel(self.fitting_groupBox)
+        self.fittingScale_label.setObjectName("fittingScale_label")
+        self.gridLayout_3.addWidget(self.fittingScale_label, 0, 0, 1, 1)
         self.fittingFitNonRigidly_pushButton = QtGui.QPushButton(self.fitting_groupBox)
         self.fittingFitNonRigidly_pushButton.setObjectName("fittingFitNonRigidly_pushButton")
-        self.gridLayout_3.addWidget(self.fittingFitNonRigidly_pushButton, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.fittingFitNonRigidly_pushButton, 5, 1, 1, 1)
+        self.fittingNonRigid_label = QtGui.QLabel(self.fitting_groupBox)
+        self.fittingNonRigid_label.setObjectName("fittingNonRigid_label")
+        self.gridLayout_3.addWidget(self.fittingNonRigid_label, 5, 0, 1, 1)
+        self.fittingScale_pushButton = QtGui.QPushButton(self.fitting_groupBox)
+        self.fittingScale_pushButton.setObjectName("fittingScale_pushButton")
+        self.gridLayout_3.addWidget(self.fittingScale_pushButton, 0, 1, 1, 1)
         self.fittingFitRigidly_pushButton = QtGui.QPushButton(self.fitting_groupBox)
         self.fittingFitRigidly_pushButton.setObjectName("fittingFitRigidly_pushButton")
-        self.gridLayout_3.addWidget(self.fittingFitRigidly_pushButton, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.fittingFitRigidly_pushButton, 2, 1, 1, 1)
         self.verticalLayout.addWidget(self.fitting_groupBox)
         spacerItem = QtGui.QSpacerItem(20, 557, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -138,8 +144,10 @@ class Ui_ParametricFittingWidget(object):
         self.timeLoop_checkBox.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Loop", None, QtGui.QApplication.UnicodeUTF8))
         self.fitting_groupBox.setTitle(QtGui.QApplication.translate("ParametricFittingWidget", "Fitting:", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Rigid:", None, QtGui.QApplication.UnicodeUTF8))
-        self.fittingNonRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Non-Rigid:", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingScale_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Scale:", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingFitNonRigidly_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit non-rigidly", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingNonRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Non-Rigid:", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingScale_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Scale", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingFitRigidly_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit rigidly", None, QtGui.QApplication.UnicodeUTF8))
         self.viewAll_button.setText(QtGui.QApplication.translate("ParametricFittingWidget", "View All", None, QtGui.QApplication.UnicodeUTF8))
         self.done_button.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Done", None, QtGui.QApplication.UnicodeUTF8))
