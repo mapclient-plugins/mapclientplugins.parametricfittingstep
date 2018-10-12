@@ -26,13 +26,18 @@ class MasterModel(QtCore.QObject):
         self._identifier = identifier
         self._filenameStem = os.path.join(self._location, self._identifier)
         self._context = image_context_data.get_context()
+        self._time_sequence = fitting_point_data['time_array']
+        del fitting_point_data['time_array']
+
         self._image_plane_model = ImagePlaneModel(self)
+
         self._fiducial_markers_model = FiducialMarkersModel(self)
         self._fiducial_markers_model.set_data(fitting_point_data)
         self._fiducial_markers_model.set_data_to_context()
+
         self._scaffold_model = ScaffoldModel(self)
         self._scaffold_model.set_scaffold(scaffold)
-        self._scaffold_model.generate_mesh()
+        # self._scaffold_model.generate_mesh()
 
         self._timekeeper = self._context.getTimekeepermodule().getDefaultTimekeeper()
         self._timer = QtCore.QTimer()
@@ -54,7 +59,7 @@ class MasterModel(QtCore.QObject):
         self._fiducial_marker_scene.create_graphics()
 
         self._scaffold_scene = ScaffoldScene(self)
-        self._scaffold_scene.create_graphics()
+        # self._scaffold_scene.create_graphics()
 
         self._settings = {TIME_LOOP_KEY: False}
         self._make_connections()
@@ -108,6 +113,9 @@ class MasterModel(QtCore.QObject):
 
         self._timekeeper.setTime(self._current_time)
         self._time_value_update(self._current_time)
+
+    def get_time_sequence(self):
+        return self._time_sequence
 
     def register_time_value_update_callback(self, time_value_update_callback):
         self._time_value_update = time_value_update_callback

@@ -129,6 +129,32 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._model.recreate_scaffold_graphics()
 
     def _calculate_rigid_transform(self):
+        fiducial_markers_model = self._model.get_fiducial_markers_model()
+        scaffold_model = self._model.get_scaffold_model()
+
+        lv_apex_fiducial_marker = fiducial_markers_model.get_node_location('1')
+        rv_lateral_point_fiducial_marker = fiducial_markers_model.get_node_location('11')
+        lv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location('7')
+        # lv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location('6')
+        fiducial_marker_locations = [lv_apex_fiducial_marker,
+                                     rv_lateral_point_fiducial_marker,
+                                     lv_lateral_point_1_fiducial_marker]
+                                     # lv_lateral_point_2_fiducial_marker]
+
+        lv_apex_scaffold = scaffold_model.get_node_location(1)
+        rv_lateral_point_scaffold = scaffold_model.get_node_location(191)
+        lv_lateral_point_1_scaffold = scaffold_model.get_node_location(121)
+        # lv_lateral_point_2_scaffold = scaffold_model.get_node_location(96)
+        scaffold_locations = [lv_apex_scaffold, rv_lateral_point_scaffold, lv_lateral_point_1_scaffold]  #, lv_lateral_point_2_scaffold]
+
+        # Formulate matrices
+        source = np.matrix(scaffold_locations)
+        target = np.matrix(fiducial_marker_locations)
+
+        rotation_mx, translation_vec = rigid_transform_3d(source.T, target.T)
+        scaffold_model.perform_rigid_transformation(rotation_mx, translation_vec)
+
+    def _calculate_rigid_transform_original(self):
         """
         Performs a rigid transformation of scaffold to fiducial landmarks and updates the view.
 
@@ -311,3 +337,30 @@ def _non_rigid_transform(landmark, node):
 
     return TY, fitting
 
+
+def rigid_transform_3d(A, B):
+    assert len(A) == len(B)
+
+    N = A.shape[1]  # total points
+    centroid_a = np.mean(A, axis=1)
+    centroid_b = np.mean(B, axis=1)
+
+    # centre the points
+    AA = A - np.tile(centroid_a, (1, N))
+    BB = B - np.tile(centroid_b, (1, N))
+
+    # dot is matrix multiplication for array
+    H = AA * BB.T
+
+    U, S, Vt = np.linalg.svd(H)
+
+    R = Vt.T * U.T
+
+    # special reflection case
+    if np.linalg.det(R) < 0:
+        Vt[2, :] *= -1
+        R = Vt.T * U.T
+
+    t = -R * centroid_a + centroid_b
+
+    return R, t

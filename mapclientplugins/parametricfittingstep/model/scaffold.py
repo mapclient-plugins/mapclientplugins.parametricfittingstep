@@ -1,5 +1,9 @@
 
+import numpy as np
+
 from opencmiss.utils.zinc import create_finite_element_field
+from opencmiss.zinc.field import Field
+from opencmiss.zinc.node import Node
 
 from mapclientplugins.parametricfittingstep.model.base import Base
 
@@ -34,6 +38,74 @@ class Scaffold(Base):
     def set_scaffold(self, scaffold):
         self._scaffold = scaffold
         self._scaffold_options = self._scaffold.getDefaultOptions()
+
+    def get_node_location(self, node_id):
+        index = 0
+        time_values = self._master_model.get_time_sequence()
+        field_module = self._region.getFieldmodule()
+        field_module.beginChange()
+
+        field_cache = field_module.createFieldcache()
+        node_set = field_module.findNodesetByName('nodes')
+        node = node_set.findNodeByIdentifier(node_id)
+        field_cache.setNode(node)
+        field_cache.setTime(time_values[index])
+        _, coordinates = self._coordinate_field.evaluateReal(field_cache, 3)
+
+        field_module.endChange()
+
+        return coordinates
+
+    def get_node_locations(self):
+        index = 0
+        time_values = self._master_model.get_time_sequence()
+        field_module = self._region.getFieldmodule()
+        field_module.beginChange()
+        cache = field_module.createFieldcache()
+        cache.setTime(time_values[index])
+        coordinates = field_module.findFieldByName('coordinates')
+        node_set = field_module.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        node_iterator = node_set.createNodeiterator()
+        node = node_iterator.next()
+
+        node_positions = []
+        while node.isValid():
+            cache.setNode(node)
+            _, position = coordinates.evaluateReal(cache, 3)
+            node_positions.append(position)
+            node = node_iterator.next()
+
+        field_module.endChange()
+
+        return node_positions
+
+    def _set_node_locations(self, locations):
+        """
+        Assuming that the index + 1 is the node identifier that the location is meant for.
+
+        :param locations: list of coordinates for the nodes
+        :return:
+        """
+        index = 0
+        time_values = self._master_model.get_time_sequence()
+        field_module = self._region.getFieldmodule()
+        field_module.beginChange()
+        field_cache = field_module.createFieldcache()
+        field_cache.setTime(time_values[index])
+        coordinates = field_module.findFieldByName('coordinates').castFiniteElement()
+        node_set = field_module.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        node_iterator = node_set.createNodeiterator()
+        node = node_iterator.next()
+
+        while node.isValid():
+            field_cache.setNode(node)
+            location_index = node.getIdentifier() - 1
+            location = locations[location_index]
+            coordinates.setNodeParameters(field_cache, -1, Node.VALUE_LABEL_VALUE, 1, location)
+            # coordinates.assignReal(cache, location)
+            node = node_iterator.next()
+
+        field_module.endChange()
 
     def is_display_surfaces_translucent(self):
         return self._settings[DISPLAY_SURFACES_TRANSLUCENT_KEY]
@@ -114,4 +186,19 @@ class Scaffold(Base):
         #     fieldassignment.assign()
         #     del newCoordinates
         #     del scale
+        field_module.endChange()
+
+    def perform_rigid_transformation(self, rotation_mx, translation_vec):
+        field_module = self._region.getFieldmodule()
+        field_module.beginChange()
+        rotation_mx = rotation_mx.tolist()
+        translation_vec = translation_vec.tolist()
+        transform_field = field_module.createFieldConstant(
+            [rotation_mx[0][0], rotation_mx[0][1], rotation_mx[0][2], translation_vec[0][0],
+             rotation_mx[1][0], rotation_mx[1][1], rotation_mx[1][2], translation_vec[1][0],
+             rotation_mx[2][0], rotation_mx[2][1], rotation_mx[2][2], translation_vec[2][0],
+             0, 0, 0, 1])
+        projection_field = field_module.createFieldProjection(self._coordinate_field, transform_field)
+        field_assignment = self._coordinate_field.createFieldassignment(projection_field)
+        field_assignment.assign()
         field_module.endChange()
