@@ -64,6 +64,9 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._ui.fittingScale_pushButton.clicked.connect(self._perform_scaffold_scale)
         self._ui.fittingFitRigidly_pushButton.clicked.connect(self._calculate_rigid_transform)
         self._ui.fittingFitNonRigidly_pushButton.clicked.connect(self._calculate_non_rigid_transform)
+        self._ui.fittingXAxis_pushButton.clicked.connect(self._rotate_scaffold)
+        self._ui.fittingYAxis_pushButton.clicked.connect(self._rotate_scaffold)
+        self._ui.fittingZAxis_pushButton.clicked.connect(self._rotate_scaffold)
 
     def _setup_handlers(self):
         basic_handler = SceneManipulation()
@@ -116,6 +119,21 @@ class ParametricFittingWidget(QtGui.QWidget):
     def _refresh_options(self):
         pass
 
+    def _rotate_scaffold(self):
+        sender = self.sender()
+        scaffold_model = self._model.get_scaffold_model()
+
+        rotation_mx = np.matrix('1 0 0; 0 1 0; 0 0 1')
+        if sender == self._ui.fittingXAxis_pushButton:
+            rotation_mx = np.matrix('1 0 0; 0 0 -1; 0 1 0')
+        elif sender == self._ui.fittingYAxis_pushButton:
+            rotation_mx = np.matrix('0 0 1; 0 1 0; -1 0 0')
+        elif sender == self._ui.fittingZAxis_pushButton:
+            rotation_mx = np.matrix('0 -1 0; 1 0 0; 0 0 1')
+
+        translation_vec = np.matrix('0; 0; 0')
+        scaffold_model.perform_rigid_transformation(rotation_mx, translation_vec)
+
     def _perform_scaffold_scale(self):
         # Can we get the maximum x and y extents and minimum x and y extents.
         # Assumption: The image plane is at z = 0.
@@ -132,20 +150,27 @@ class ParametricFittingWidget(QtGui.QWidget):
         fiducial_markers_model = self._model.get_fiducial_markers_model()
         scaffold_model = self._model.get_scaffold_model()
 
-        lv_apex_fiducial_marker = fiducial_markers_model.get_node_location('1')
-        rv_lateral_point_fiducial_marker = fiducial_markers_model.get_node_location('11')
-        lv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location('7')
-        # lv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location('6')
+        lv_apex_fiducial_marker = fiducial_markers_model.get_node_location(1)
+        rv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(10)
+        rv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(11)
+        lv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(6)
+        lv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(7)
         fiducial_marker_locations = [lv_apex_fiducial_marker,
-                                     rv_lateral_point_fiducial_marker,
-                                     lv_lateral_point_1_fiducial_marker]
-                                     # lv_lateral_point_2_fiducial_marker]
+                                     rv_lateral_point_1_fiducial_marker,
+                                     rv_lateral_point_2_fiducial_marker,
+                                     lv_lateral_point_1_fiducial_marker,
+                                     lv_lateral_point_2_fiducial_marker]
 
-        lv_apex_scaffold = scaffold_model.get_node_location(1)
-        rv_lateral_point_scaffold = scaffold_model.get_node_location(191)
-        lv_lateral_point_1_scaffold = scaffold_model.get_node_location(121)
-        # lv_lateral_point_2_scaffold = scaffold_model.get_node_location(96)
-        scaffold_locations = [lv_apex_scaffold, rv_lateral_point_scaffold, lv_lateral_point_1_scaffold]  #, lv_lateral_point_2_scaffold]
+        lv_apex_scaffold = scaffold_model.get_node_location(self._node_to_fit['lv_apex'])
+        rv_lateral_point_1_scaffold = scaffold_model.get_node_location(self._node_to_fit['rv1'])
+        rv_lateral_point_2_scaffold = scaffold_model.get_node_location(self._node_to_fit['rv2'])
+        lv_lateral_point_1_scaffold = scaffold_model.get_node_location(self._node_to_fit['lv1'])
+        lv_lateral_point_2_scaffold = scaffold_model.get_node_location(self._node_to_fit['lv2'])
+        scaffold_locations = [lv_apex_scaffold,
+                              rv_lateral_point_1_scaffold,
+                              rv_lateral_point_2_scaffold,
+                              lv_lateral_point_1_scaffold,
+                              lv_lateral_point_2_scaffold]
 
         # Formulate matrices
         source = np.matrix(scaffold_locations)
@@ -195,7 +220,9 @@ class ParametricFittingWidget(QtGui.QWidget):
         """ computing rigid transformation parameters 2 """
         _, transformation = _rigid_transform(fiducial_marker_positions, node_set_array)
         rigid_rotation, rigid_translation, rigid_scale = transformation.R, transformation.t, transformation.s
-
+        print(rigid_rotation)
+        print(rigid_translation)
+        print(rigid_scale)
         """ finding the new node positions """
         transformed_nodes = np.dot(node_set_array, np.transpose(rigid_rotation)) + np.tile(
             np.transpose(rigid_translation), (node_set_array.shape[0], 1))
@@ -341,13 +368,14 @@ def _non_rigid_transform(landmark, node):
 def rigid_transform_3d(A, B):
     assert len(A) == len(B)
 
-    N = A.shape[1]  # total points
+    n1 = A.shape[1]  # total points
+    n2 = B.shape[1]
     centroid_a = np.mean(A, axis=1)
     centroid_b = np.mean(B, axis=1)
 
     # centre the points
-    AA = A - np.tile(centroid_a, (1, N))
-    BB = B - np.tile(centroid_b, (1, N))
+    AA = A - np.tile(centroid_a, (1, n1))
+    BB = B - np.tile(centroid_b, (1, n2))
 
     # dot is matrix multiplication for array
     H = AA * BB.T

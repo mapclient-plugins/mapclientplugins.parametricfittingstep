@@ -19,8 +19,8 @@
   <property name="windowTitle">
    <string>Parametric Fitting</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
     <widget class="QDockWidget" name="dockWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -31,7 +31,7 @@
      <property name="minimumSize">
       <size>
        <width>353</width>
-       <height>373</height>
+       <height>430</height>
       </size>
      </property>
      <property name="features">
@@ -132,7 +132,7 @@
           <string>Fitting:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="fittingRigid_label">
             <property name="text">
              <string>Rigid:</string>
@@ -146,17 +146,24 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QPushButton" name="fittingFitNonRigidly_pushButton">
             <property name="text">
              <string>Fit non-rigidly</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
+          <item row="6" column="0">
            <widget class="QLabel" name="fittingNonRigid_label">
             <property name="text">
              <string>Non-Rigid:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QPushButton" name="fittingFitRigidly_pushButton">
+            <property name="text">
+             <string>Fit rigidly</string>
             </property>
            </widget>
           </item>
@@ -167,11 +174,49 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QPushButton" name="fittingFitRigidly_pushButton">
-            <property name="text">
-             <string>Fit rigidly</string>
+          <item row="2" column="0" colspan="2">
+           <widget class="QFrame" name="frame_2">
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
             </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="0" column="4">
+              <widget class="QPushButton" name="fittingZAxis_pushButton">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/parametricfitting/images/axis_roation_z_axis_icon.png</normaloff>:/parametricfitting/images/axis_roation_z_axis_icon.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="fittingXAxis_pushButton">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/parametricfitting/images/axis_roation_x_axis_icon.png</normaloff>:/parametricfitting/images/axis_roation_x_axis_icon.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="fittingYAxis_pushButton">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/parametricfitting/images/axis_roation_y_axis_icon.png</normaloff>:/parametricfitting/images/axis_roation_y_axis_icon.png</iconset>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -242,7 +287,7 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item row="0" column="1">
     <widget class="BaseSceneviewerWidget" name="sceneviewer_widget" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -262,6 +307,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
