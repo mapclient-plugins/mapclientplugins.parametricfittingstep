@@ -306,8 +306,8 @@ class ParametricFittingWidget(QtGui.QWidget):
 
         scaffold_model.clear_temp_region()
 
-        sum_squared = np.sum(np.square(diff_mx))
-        return sum_squared
+        sum_of_squares = np.sum(np.square(diff_mx))
+        return sum_of_squares
 
     def _calculate_non_rigid_transform(self):
         fiducial_markers_model = self._model.get_fiducial_markers_model()
