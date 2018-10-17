@@ -9,6 +9,7 @@ from mapclientplugins.parametricfittingstep.model.base import Base
 
 
 DISPLAY_SURFACES_TRANSLUCENT_KEY = 'display_surface'
+FIT_OPTIONS = ['LV outer height', 'Base height', 'LV outer radius', 'RV width']
 
 
 class Scaffold(Base):
@@ -19,6 +20,7 @@ class Scaffold(Base):
         self._master_model = master_model
         self._region = None
         self._region_name = 'scaffold'
+        self._temp_region = None
         self._scaffold = None
         self._scaffold_options = None
         self._coordinate_field = None
@@ -42,19 +44,12 @@ class Scaffold(Base):
     def get_node_location(self, node_id):
         index = 0
         time_values = self._master_model.get_time_sequence()
-        field_module = self._region.getFieldmodule()
-        field_module.beginChange()
+        return _get_node_location(self._region, time_values, index, node_id)
 
-        field_cache = field_module.createFieldcache()
-        node_set = field_module.findNodesetByName('nodes')
-        node = node_set.findNodeByIdentifier(node_id)
-        field_cache.setNode(node)
-        field_cache.setTime(time_values[index])
-        _, coordinates = self._coordinate_field.evaluateReal(field_cache, 3)
-
-        field_module.endChange()
-
-        return coordinates
+    def get_temp_node_location(self, node_id):
+        index = 0
+        time_values = self._master_model.get_time_sequence()
+        return _get_node_location(self._temp_region, time_values, index, node_id)
 
     def get_node_locations(self):
         index = 0
@@ -116,6 +111,21 @@ class Scaffold(Base):
     def get_region(self):
         return self._region
 
+    def clear_temp_region(self):
+        self._temp_region = None
+
+    def set_fit_parameters(self, fit_parameters):
+        for index, option in enumerate(FIT_OPTIONS):
+            self._scaffold_options[option] = fit_parameters[index]
+
+    def get_fit_parameters(self):
+
+        parameters = []
+        for option in FIT_OPTIONS:
+            parameters.append(self._scaffold_options[option])
+
+        return parameters
+
     def _scale_width(self, width):
         width_options = ['LV outer radius', 'LV free wall thickness', 'LV apex thickness',
                          'RV width', 'RV extra cross radius base', 'Ventricular septum thickness',
@@ -137,6 +147,17 @@ class Scaffold(Base):
         self._scale_width(width * 0.8)
         self._scale_height(height * 0.8)
         self.generate_mesh()
+
+    def generate_temp(self, fit_options_array):
+        fit_options = {}
+        for index in range(len(FIT_OPTIONS)):
+            fit_options = {FIT_OPTIONS[index]: fit_options_array[index]}
+
+        temp_options = self._scaffold_options.copy()
+        temp_options.update(fit_options)
+
+        self._temp_region = self._parent_region.createRegion()
+        self._scaffold.generateMesh(self._temp_region, temp_options)
 
     def generate_mesh(self):
         self._initialise_region()
@@ -189,16 +210,41 @@ class Scaffold(Base):
         field_module.endChange()
 
     def perform_rigid_transformation(self, rotation_mx, translation_vec):
-        field_module = self._region.getFieldmodule()
-        field_module.beginChange()
-        rotation_mx = rotation_mx.tolist()
-        translation_vec = translation_vec.tolist()
-        transform_field = field_module.createFieldConstant(
-            [rotation_mx[0][0], rotation_mx[0][1], rotation_mx[0][2], translation_vec[0][0],
-             rotation_mx[1][0], rotation_mx[1][1], rotation_mx[1][2], translation_vec[1][0],
-             rotation_mx[2][0], rotation_mx[2][1], rotation_mx[2][2], translation_vec[2][0],
-             0, 0, 0, 1])
-        projection_field = field_module.createFieldProjection(self._coordinate_field, transform_field)
-        field_assignment = self._coordinate_field.createFieldassignment(projection_field)
-        field_assignment.assign()
-        field_module.endChange()
+        _perform_rigid_transformation(self._region, rotation_mx, translation_vec)
+
+    def perform_rigid_transformation_on_temp(self, rotation_mx, translation_vec):
+        _perform_rigid_transformation(self._temp_region, rotation_mx, translation_vec)
+
+
+def _perform_rigid_transformation(region, rotation_mx, translation_vec):
+    field_module = region.getFieldmodule()
+    coordinate_field = field_module.findFieldByName('coordinates')
+    field_module.beginChange()
+    rotation_mx = rotation_mx.tolist()
+    translation_vec = translation_vec.tolist()
+    transform_field = field_module.createFieldConstant(
+        [rotation_mx[0][0], rotation_mx[0][1], rotation_mx[0][2], translation_vec[0][0],
+         rotation_mx[1][0], rotation_mx[1][1], rotation_mx[1][2], translation_vec[1][0],
+         rotation_mx[2][0], rotation_mx[2][1], rotation_mx[2][2], translation_vec[2][0],
+         0, 0, 0, 1])
+    projection_field = field_module.createFieldProjection(coordinate_field, transform_field)
+    field_assignment = coordinate_field.createFieldassignment(projection_field)
+    field_assignment.assign()
+    field_module.endChange()
+
+
+def _get_node_location(region, time_values, time_index, node_id):
+    field_module = region.getFieldmodule()
+    field_module.beginChange()
+
+    coordinate_field = field_module.findFieldByName('coordinates')
+    field_cache = field_module.createFieldcache()
+    node_set = field_module.findNodesetByName('nodes')
+    node = node_set.findNodeByIdentifier(node_id)
+    field_cache.setNode(node)
+    field_cache.setTime(time_values[time_index])
+    _, coordinates = coordinate_field.evaluateReal(field_cache, 3)
+
+    field_module.endChange()
+
+    return coordinates
