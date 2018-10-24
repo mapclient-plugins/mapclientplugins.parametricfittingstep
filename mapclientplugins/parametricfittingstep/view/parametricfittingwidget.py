@@ -74,9 +74,6 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._ui.fittingScale_pushButton.clicked.connect(self._perform_scaffold_scale)
         self._ui.fittingFitRigidly_pushButton.clicked.connect(self._do_initial_rigid_fit)
         self._ui.fittingFitNonRigidly_pushButton.clicked.connect(self._do_non_linear_fit)
-        self._ui.fittingXAxis_pushButton.clicked.connect(self._rotate_scaffold)
-        self._ui.fittingYAxis_pushButton.clicked.connect(self._rotate_scaffold)
-        self._ui.fittingZAxis_pushButton.clicked.connect(self._rotate_scaffold)
         self._ui.fittingFitEpochs_pushButton.clicked.connect(self._do_epochs_fit)
 
     def _setup_handlers(self):
@@ -129,21 +126,6 @@ class ParametricFittingWidget(QtGui.QWidget):
 
     def _refresh_options(self):
         pass
-
-    def _rotate_scaffold(self):
-        sender = self.sender()
-        scaffold_model = self._model.get_scaffold_model()
-
-        rotation_mx = np.matrix('1 0 0; 0 1 0; 0 0 1')
-        if sender == self._ui.fittingXAxis_pushButton:
-            rotation_mx = np.matrix('1 0 0; 0 0 -1; 0 1 0')
-        elif sender == self._ui.fittingYAxis_pushButton:
-            rotation_mx = np.matrix('0 0 1; 0 1 0; -1 0 0')
-        elif sender == self._ui.fittingZAxis_pushButton:
-            rotation_mx = np.matrix('0 -1 0; 1 0 0; 0 0 1')
-
-        translation_vec = np.matrix('0; 0; 0')
-        scaffold_model.perform_rigid_transformation(rotation_mx, translation_vec)
 
     def _perform_scaffold_scale(self):
         # Can we get the maximum x and y extents and minimum x and y extents.
