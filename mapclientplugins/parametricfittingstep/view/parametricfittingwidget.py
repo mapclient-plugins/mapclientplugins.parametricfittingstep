@@ -197,7 +197,7 @@ class ParametricFittingWidget(QtGui.QWidget):
     def _do_epochs_fit(self):
         epoch_count = self._model.get_frame_count()
         progress = QtGui.QProgressDialog("Fitting over all epochs ...", "Abort Fitting", 0, epoch_count, self)
-        for epoch in [6, 11, 17, 23, 27, 31]:#range(1, epoch_count):
+        for epoch in range(1, epoch_count):
             progress.setValue(epoch)
             self._do_non_linear_fit_at_epoch(epoch)
             if progress.wasCanceled():
