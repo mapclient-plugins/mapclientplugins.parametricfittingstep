@@ -74,18 +74,16 @@ class FiducialMarkers(Base):
         self._coordinate_field.assignReal(field_cache, location)
         field_module.endChange()
 
-    def get_node_locations(self):
+    def get_node_locations(self, index=0):
         locations = []
-        index = 0
         for key in self._fiducial_marker_data:
             point_location = self._fiducial_marker_data[key][index]
             locations.append(point_location)
 
         return locations
 
-    def get_node_location(self, node_id):
+    def get_node_location(self, node_id, index=0):
         location = []
-        index = 0
         data_key = self._node_id_to_data_key_map[node_id]
         if data_key in self._fiducial_marker_data:
             location = self._fiducial_marker_data[data_key][index]

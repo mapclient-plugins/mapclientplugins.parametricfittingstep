@@ -4,6 +4,7 @@ import numpy as np
 from opencmiss.utils.zinc import create_finite_element_field
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
+from opencmiss.zinc.streamregion import StreaminformationRegion
 
 from mapclientplugins.parametricfittingstep.model.base import Base
 
@@ -23,6 +24,8 @@ class Scaffold(Base):
         self._temp_region = None
         self._scaffold = None
         self._scaffold_options = None
+        self._scaffold_is_time_aware = False
+        self._scaffold_fit_parameters = None
         self._coordinate_field = None
 
         self._initialise()
@@ -39,10 +42,23 @@ class Scaffold(Base):
 
     def set_scaffold(self, scaffold):
         self._scaffold = scaffold
-        self._scaffold_options = self._scaffold.getDefaultOptions()
 
-    def get_node_location(self, node_id):
-        index = 0
+    def get_default_scaffold_options(self):
+        return self._scaffold.getDefaultOptions()
+
+    def get_scaffold_options(self):
+        return self._scaffold_options
+
+    def set_scaffold_options(self, options):
+        self._scaffold_options = options
+
+        parameters = []
+        for option in FIT_OPTIONS:
+            parameters.append(self._scaffold_options[option])
+
+        self._scaffold_fit_parameters = parameters
+
+    def get_node_location(self, node_id, index=0):
         time_values = self._master_model.get_time_sequence()
         return _get_node_location(self._region, time_values, index, node_id)
 
@@ -115,98 +131,58 @@ class Scaffold(Base):
         self._temp_region = None
 
     def set_fit_parameters(self, fit_parameters):
-        for index, option in enumerate(FIT_OPTIONS):
-            self._scaffold_options[option] = fit_parameters[index]
+        self._scaffold_fit_parameters = fit_parameters
 
     def get_fit_parameters(self):
+        return self._scaffold_fit_parameters
 
-        parameters = []
-        for option in FIT_OPTIONS:
-            parameters.append(self._scaffold_options[option])
+    def scale(self, options, width, height):
+        _scale_width(options, width * 0.8)
+        _scale_height(options, height * 0.8)
+        self.generate_mesh(options)
 
-        return parameters
+    def _undefine_scaffold_nodes(self):
+        field_module = self._region.getFieldmodule()
 
-    def _scale_width(self, width):
-        width_options = ['LV outer radius', 'LV free wall thickness', 'LV apex thickness',
-                         'RV width', 'RV extra cross radius base', 'Ventricular septum thickness',
-                         'Atria base inner major axis length', 'Atria base inner minor axis length',
-                         'Atrial septum thickness', 'Atrial base wall thickness',
-                         'LV outlet inner diameter', 'LV outlet wall thickness',
-                         'RV outlet inner diameter', 'RV outlet wall thickness']
-        for option in width_options:
-            self._scaffold_options[option] *= width
+        field_module.beginChange()
+        node_set = field_module.findNodesetByName('nodes')
+        node_template = node_set.createNodetemplate()
+        node_template.undefineField(self._coordinate_field)
+        node_iterator = node_set.createNodeiterator()
+        node = node_iterator.next()
+        while node.isValid():
+            node.merge(node_template)
+            node = node_iterator.next()
 
-    def _scale_height(self, height):
-        height_options = ['LV outer height', 'RV inner height', 'RV free wall thickness',
-                          'Base height', 'Base thickness', 'Fibrous ring thickness',
-                          'Ventricles outlet element length', 'Ventricles outlet spacing']
-        for option in height_options:
-            self._scaffold_options[option] *= height
+        field_module.endChange()
 
-    def scale(self, width, height):
-        self._scale_width(width * 0.8)
-        self._scale_height(height * 0.8)
-        self.generate_mesh()
+    def transfer_temp_into_main(self, time):
+        node_descriptions = _extract_node_descriptions(self._temp_region)
+        if not self._scaffold_is_time_aware:
+            self._undefine_scaffold_nodes()
+            self._scaffold_is_time_aware = True
 
-    def generate_temp(self, fit_options_array):
+        _read_node_descriptions(self._region, node_descriptions, time)
+
+    def generate_temp_mesh(self, fit_options_array=None):
+
         fit_options = {}
-        for index in range(len(FIT_OPTIONS)):
-            fit_options = {FIT_OPTIONS[index]: fit_options_array[index]}
+        if fit_options_array is not None:
+            for index in range(len(FIT_OPTIONS)):
+                fit_options[FIT_OPTIONS[index]] = fit_options_array[index]
 
-        temp_options = self._scaffold_options.copy()
+        temp_options = self.get_scaffold_options().copy()
         temp_options.update(fit_options)
 
         self._temp_region = self._parent_region.createRegion()
         self._scaffold.generateMesh(self._temp_region, temp_options)
 
-    def generate_mesh(self):
+    def generate_mesh(self, options):
         self._initialise_region()
-        # self._scene = self._region.getScene()
         field_module = self._region.getFieldmodule()
         field_module.beginChange()
-        self._scaffold.generateMesh(self._region, self._scaffold_options)
-        # logger = self._context.getLogger()
-        # annotationGroups = self._currentMeshType.generateMesh(self._region, self._scaffold.getDefaultOptions())
-        # loggerMessageCount = logger.getNumberOfMessages()
-        # if loggerMessageCount > 0:
-        #     for i in range(1, loggerMessageCount + 1):
-        #         print(logger.getMessageTypeAtIndex(i), logger.getMessageTextAtIndex(i))
-        #     logger.removeAllMessages()
-        # mesh = self._getMesh()
-        # meshDimension = mesh.getDimension()
-        # nodes = field_module.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
-        # if len(self._deleteElementRanges) > 0:
-        #     deleteElementIdentifiers = []
-        #     elementIter = mesh.createElementiterator()
-        #     element = elementIter.next()
-        #     while element.isValid():
-        #         identifier = element.getIdentifier()
-        #         for deleteElementRange in self._deleteElementRanges:
-        #             if (identifier >= deleteElementRange[0]) and (identifier <= deleteElementRange[1]):
-        #                 deleteElementIdentifiers.append(identifier)
-        #         element = elementIter.next()
-        #     #print('delete elements ', deleteElementIdentifiers)
-        #     for identifier in deleteElementIdentifiers:
-        #         element = mesh.findElementByIdentifier(identifier)
-        #         mesh.destroyElement(element)
-        #     del element
-        #     # destroy all orphaned nodes
-        #     #size1 = nodes.getSize()
-        #     nodes.destroyAllNodes()
-        #     #size2 = nodes.getSize()
-        #     #print('deleted', size1 - size2, 'nodes')
+        self._scaffold.generateMesh(self._region, options)
         field_module.defineAllFaces()
-        # if annotationGroups is not None:
-        #     for annotationGroup in annotationGroups:
-        #         annotationGroup.addSubelements()
-        # if self._settings['scale'] != '1*1*1':
-        #     coordinates = field_module.findFieldByName('coordinates').castFiniteElement()
-        #     scale = field_module.createFieldConstant(self._scale)
-        #     newCoordinates = field_module.createFieldMultiply(coordinates, scale)
-        #     fieldassignment = coordinates.createFieldassignment(newCoordinates)
-        #     fieldassignment.assign()
-        #     del newCoordinates
-        #     del scale
         field_module.endChange()
 
     def perform_rigid_transformation(self, rotation_mx, translation_vec):
@@ -248,3 +224,54 @@ def _get_node_location(region, time_values, time_index, node_id):
     field_module.endChange()
 
     return coordinates
+
+
+def _scale_width(options, width):
+
+    width_options = ['LV outer radius', 'LV free wall thickness', 'LV apex thickness',
+                     'RV width', 'RV extra cross radius base', 'Ventricular septum thickness',
+                     'Atria base inner major axis length', 'Atria base inner minor axis length',
+                     'Atrial septum thickness', 'Atrial base wall thickness',
+                     'LV outlet inner diameter', 'LV outlet wall thickness',
+                     'RV outlet inner diameter', 'RV outlet wall thickness']
+    for option in width_options:
+        options[option] *= width
+
+
+def _scale_height(options, height):
+
+    height_options = ['LV outer height', 'RV inner height', 'RV free wall thickness',
+                      'Base height', 'Base thickness', 'Fibrous ring thickness',
+                      'Ventricles outlet element length', 'Ventricles outlet spacing']
+    for option in height_options:
+        options[option] *= height
+
+
+def _extract_node_descriptions(region):
+    stream_information = region.createStreaminformationRegion()
+    memory_resource = stream_information.createStreamresourceMemory()
+    stream_information.setResourceDomainTypes(memory_resource, Field.DOMAIN_TYPE_NODES)
+    region.write(stream_information)
+    _, buffer_contents = memory_resource.getBuffer()
+
+    return buffer_contents
+
+
+def _read_node_descriptions(region, buffer, time):
+    stream_information = region.createStreaminformationRegion()
+    memory_resource = stream_information.createStreamresourceMemoryBuffer(buffer)
+    stream_information.setResourceDomainTypes(memory_resource, Field.DOMAIN_TYPE_NODES)
+    stream_information.setResourceAttributeReal(memory_resource, StreaminformationRegion.ATTRIBUTE_TIME, time)
+
+    region.read(stream_information)
+
+
+def _print_node_location(region):
+    node_id = 62
+    field_module = region.getFieldmodule()
+    node_set = field_module.findNodesetByName('nodes')
+    node = node_set.findNodeByIdentifier(node_id)
+    field_cache = field_module.createFieldcache()
+    field_cache.setNode(node)
+    coordinate_field = field_module.findFieldByName('coordinates')
+    print(coordinate_field.evaluateReal(field_cache, 3))

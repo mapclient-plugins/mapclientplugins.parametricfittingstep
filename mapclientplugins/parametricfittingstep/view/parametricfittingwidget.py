@@ -28,6 +28,7 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._ui.sceneviewer_widget.set_context(model.get_context())
         self._model.register_time_value_update_callback(self._update_time_value)
 
+        self._fiducial_marker_locations = []
         self._done_callback = None
         self._initialise_ui()
         self._setup_handlers()
@@ -47,8 +48,8 @@ class ParametricFittingWidget(QtGui.QWidget):
                                     'lb1': 3, 'lb2': 4}
         self._applied_rotation_mx = np.matrix('1 0 0; 0 1 0; 0 0 1')
         self._applied_translation_vec = np.matrix('0; 0; 0')
-
-        self._fiducial_marker_positions = None
+        self._applied_width_scale = 1
+        self._applied_height_scale = 1
 
     def _graphics_initialized(self):
         """
@@ -71,11 +72,12 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._ui.timeLoop_checkBox.clicked.connect(self._time_loop_clicked)
         self._model.time_stopped.connect(self._time_play_stop_clicked)
         self._ui.fittingScale_pushButton.clicked.connect(self._perform_scaffold_scale)
-        self._ui.fittingFitRigidly_pushButton.clicked.connect(self._do_rigid_fit)
+        self._ui.fittingFitRigidly_pushButton.clicked.connect(self._do_initial_rigid_fit)
         self._ui.fittingFitNonRigidly_pushButton.clicked.connect(self._do_non_linear_fit)
         self._ui.fittingXAxis_pushButton.clicked.connect(self._rotate_scaffold)
         self._ui.fittingYAxis_pushButton.clicked.connect(self._rotate_scaffold)
         self._ui.fittingZAxis_pushButton.clicked.connect(self._rotate_scaffold)
+        self._ui.fittingFitEpochs_pushButton.clicked.connect(self._do_epochs_fit)
 
     def _setup_handlers(self):
         basic_handler = SceneManipulation()
@@ -149,38 +151,22 @@ class ParametricFittingWidget(QtGui.QWidget):
         fiducial_markers_model = self._model.get_fiducial_markers_model()
         scaffold_model = self._model.get_scaffold_model()
         min_x, max_x, min_y, max_y = fiducial_markers_model.calculate_extents()
-        approximate_width = max_x - min_x
-        approximate_height = max_y - min_y
+        self._applied_width_scale = max_x - min_x
+        self._applied_height_scale = max_y - min_y
         # Create scaled scaffold to these approximations
-        scaffold_model.scale(approximate_width, approximate_height)
+        options = scaffold_model.get_default_scaffold_options()
+        scaffold_model.scale(options, self._applied_width_scale, self._applied_height_scale)
+        scaffold_model.set_scaffold_options(options)
         self._model.recreate_scaffold_graphics()
 
-    def _do_rigid_fit(self):
-        fiducial_markers_model = self._model.get_fiducial_markers_model()
+    def _do_initial_rigid_fit(self):
+        # fiducial_markers_model = self._model.get_fiducial_markers_model()
         scaffold_model = self._model.get_scaffold_model()
 
-        lv_apex_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv_apex'])
-        rv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv1'])
-        rv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv2'])
-        lv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv1'])
-        lv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv2'])
-        fiducial_marker_locations = [lv_apex_fiducial_marker,
-                                     rv_lateral_point_1_fiducial_marker,
-                                     rv_lateral_point_2_fiducial_marker,
-                                     lv_lateral_point_1_fiducial_marker,
-                                     lv_lateral_point_2_fiducial_marker]
+        scaffold_model.generate_temp_mesh()
 
-        lv_apex_scaffold = scaffold_model.get_node_location(self._scaffold_fit_nodes['lv_apex'])
-        rv_lateral_point_1_scaffold = scaffold_model.get_node_location(self._scaffold_fit_nodes['rv1'])
-        rv_lateral_point_2_scaffold = scaffold_model.get_node_location(self._scaffold_fit_nodes['rv2'])
-        lv_lateral_point_1_scaffold = scaffold_model.get_node_location(self._scaffold_fit_nodes['lv1'])
-        lv_lateral_point_2_scaffold = scaffold_model.get_node_location(self._scaffold_fit_nodes['lv2'])
-        scaffold_locations = [lv_apex_scaffold,
-                              rv_lateral_point_1_scaffold,
-                              rv_lateral_point_2_scaffold,
-                              lv_lateral_point_1_scaffold,
-                              lv_lateral_point_2_scaffold]
-
+        fiducial_marker_locations = self._get_fiducial_marker_locations(0)
+        scaffold_locations = self._get_temp_scaffold_locations()
         # Formulate matrices
         source = np.matrix(scaffold_locations)
         target = np.matrix(fiducial_marker_locations)
@@ -189,6 +175,100 @@ class ParametricFittingWidget(QtGui.QWidget):
         scaffold_model.perform_rigid_transformation(rotation_mx, translation_vec)
         self._applied_rotation_mx = rotation_mx
         self._applied_translation_vec = translation_vec
+
+    def _do_non_linear_fit(self):
+        progress = QtGui.QProgressDialog("Fitting initial epoch ...", "Abort Fitting", 0, 5, self)
+        progress.setValue(2)
+        self._do_non_linear_fit_at_epoch(0)
+        progress.setValue(5)
+
+    def _do_non_linear_fit_at_epoch(self, epoch):
+        scaffold_model = self._model.get_scaffold_model()
+        fit_parameters = scaffold_model.get_fit_parameters()
+        x0 = np.array(fit_parameters)
+        self._fiducial_marker_locations = self._get_fiducial_marker_locations(epoch)
+        result = minimize(self._objective_function, x0, method='nelder-mead', options={'xtol': 100, 'disp': False})
+
+        scaffold_model.generate_temp_mesh(result.x)
+        scaffold_model.perform_rigid_transformation_on_temp(self._applied_rotation_mx, self._applied_translation_vec)
+        scaffold_model.transfer_temp_into_main(self._model.get_time_for_epoch(epoch))
+        scaffold_model.set_fit_parameters(result.x)
+
+    def _do_epochs_fit(self):
+        epoch_count = self._model.get_frame_count()
+        progress = QtGui.QProgressDialog("Fitting over all epochs ...", "Abort Fitting", 0, epoch_count, self)
+        for epoch in [6, 11, 17, 23, 27, 31]:#range(1, epoch_count):
+            progress.setValue(epoch)
+            self._do_non_linear_fit_at_epoch(epoch)
+            if progress.wasCanceled():
+                break
+        progress.setValue(epoch_count)
+
+    def _get_fiducial_marker_locations(self, epoch):
+        fiducial_markers_model = self._model.get_fiducial_markers_model()
+
+        lv_apex_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv_apex'], epoch)
+        rv_lateral_point_1_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv1'], epoch)
+        rv_lateral_point_2_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv2'], epoch)
+        septum_point_1_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept1'], epoch)
+        septum_point_2_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept2'], epoch)
+        lv_lateral_point_1_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv1'], epoch)
+        lv_lateral_point_2_fiducial_marker = \
+            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv2'], epoch)
+
+        fiducial_marker_locations = [lv_apex_fiducial_marker,
+                                     rv_lateral_point_1_fiducial_marker,
+                                     rv_lateral_point_2_fiducial_marker,
+                                     septum_point_1_fiducial_marker,
+                                     septum_point_2_fiducial_marker,
+                                     lv_lateral_point_1_fiducial_marker,
+                                     lv_lateral_point_2_fiducial_marker]
+
+        return fiducial_marker_locations
+
+    def _get_temp_scaffold_locations(self):
+        scaffold_model = self._model.get_scaffold_model()
+        # Calculate the least squares error for the parameters.
+        # Get the coordinates from the scaffold.
+        lv_apex_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv_apex'])
+        rv_lateral_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['rv1'])
+        rv_lateral_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['rv2'])
+        septum_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['sept1'])
+        septum_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['sept2'])
+        lv_lateral_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv1'])
+        lv_lateral_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv2'])
+        scaffold_locations = [lv_apex_scaffold,
+                              rv_lateral_point_1_scaffold,
+                              rv_lateral_point_2_scaffold,
+                              septum_point_1_scaffold,
+                              septum_point_2_scaffold,
+                              lv_lateral_point_1_scaffold,
+                              lv_lateral_point_2_scaffold]
+
+        return scaffold_locations
+
+    def _objective_function(self, fit_parameters):
+        scaffold_model = self._model.get_scaffold_model()
+        # Calculate the least squares error for the parameters.
+        # Generate a scaffold for the given parameters.
+        scaffold_model.generate_temp_mesh(fit_parameters.tolist())
+        scaffold_model.perform_rigid_transformation_on_temp(self._applied_rotation_mx, self._applied_translation_vec)
+        # Calculate the difference between the relevant points.
+        f_mx = np.matrix(self._fiducial_marker_locations)
+        s_mx = np.matrix(self._get_temp_scaffold_locations())
+
+        diff_mx = f_mx - s_mx
+
+        scaffold_model.clear_temp_region()
+
+        sum_of_squares = np.sqrt(np.sum(np.square(diff_mx)))
+        return sum_of_squares
 
     def _calculate_rigid_transform(self):
         """
@@ -246,68 +326,6 @@ class ParametricFittingWidget(QtGui.QWidget):
 
         """ setting the nodal parameters """
         _set_node_parameters(cache, field_module, nodes, coordinates, transformed_nodes, node_set_array)
-
-    def _do_non_linear_fit(self):
-        scaffold_model = self._model.get_scaffold_model()
-        fit_parameters = scaffold_model.get_fit_parameters()
-        x0 = np.array(fit_parameters)
-        result = minimize(self._objective_function, x0, method='nelder-mead', options={'xtol': 1e-6, 'disp': True})
-
-        scaffold_model.set_fit_parameters(result.x)
-        scaffold_model.generate_mesh()
-        self._do_rigid_fit()
-        self._model.recreate_scaffold_graphics()
-
-    def _objective_function(self, parameters):
-        fiducial_markers_model = self._model.get_fiducial_markers_model()
-        scaffold_model = self._model.get_scaffold_model()
-        # print(parameters)
-        # Calculate the least squares error for the parameters.
-        # Generate a scaffold for the given parameters.
-        scaffold_model.generate_temp(parameters)
-        scaffold_model.perform_rigid_transformation_on_temp(self._applied_rotation_mx, self._applied_translation_vec)
-        # Calculate the difference between the relevant points.
-        # Get the coordinates from the scaffold.
-
-        lv_apex_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv_apex'])
-        rv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv1'])
-        rv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv2'])
-        septum_point_1_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept1'])
-        septum_point_2_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept2'])
-        lv_lateral_point_1_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv1'])
-        lv_lateral_point_2_fiducial_marker = fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv2'])
-        fiducial_marker_locations = [lv_apex_fiducial_marker,
-                                     rv_lateral_point_1_fiducial_marker,
-                                     rv_lateral_point_2_fiducial_marker,
-                                     septum_point_1_fiducial_marker,
-                                     septum_point_2_fiducial_marker,
-                                     lv_lateral_point_1_fiducial_marker,
-                                     lv_lateral_point_2_fiducial_marker]
-
-        lv_apex_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv_apex'])
-        rv_lateral_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['rv1'])
-        rv_lateral_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['rv2'])
-        septum_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['sept1'])
-        septum_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['sept2'])
-        lv_lateral_point_1_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv1'])
-        lv_lateral_point_2_scaffold = scaffold_model.get_temp_node_location(self._scaffold_fit_nodes['lv2'])
-        scaffold_locations = [lv_apex_scaffold,
-                              rv_lateral_point_1_scaffold,
-                              rv_lateral_point_2_scaffold,
-                              septum_point_1_scaffold,
-                              septum_point_2_scaffold,
-                              lv_lateral_point_1_scaffold,
-                              lv_lateral_point_2_scaffold]
-
-        f_mx = np.matrix(fiducial_marker_locations)
-        s_mx = np.matrix(scaffold_locations)
-
-        diff_mx = f_mx - s_mx
-
-        scaffold_model.clear_temp_region()
-
-        sum_of_squares = np.sum(np.square(diff_mx))
-        return sum_of_squares
 
     def _calculate_non_rigid_transform(self):
         fiducial_markers_model = self._model.get_fiducial_markers_model()

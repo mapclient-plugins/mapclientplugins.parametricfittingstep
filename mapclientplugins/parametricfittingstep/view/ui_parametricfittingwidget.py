@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mapclientplugins\parametricfittingstep\qt\parametricfittingwidget.ui'
 #
-# Created: Mon Oct 15 13:37:19 2018
+# Created: Thu Oct 18 13:41:05 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -84,12 +84,6 @@ class Ui_ParametricFittingWidget(object):
         self.fittingScale_label = QtGui.QLabel(self.fitting_groupBox)
         self.fittingScale_label.setObjectName("fittingScale_label")
         self.gridLayout_3.addWidget(self.fittingScale_label, 0, 0, 1, 1)
-        self.fittingFitNonRigidly_pushButton = QtGui.QPushButton(self.fitting_groupBox)
-        self.fittingFitNonRigidly_pushButton.setObjectName("fittingFitNonRigidly_pushButton")
-        self.gridLayout_3.addWidget(self.fittingFitNonRigidly_pushButton, 6, 1, 1, 1)
-        self.fittingNonRigid_label = QtGui.QLabel(self.fitting_groupBox)
-        self.fittingNonRigid_label.setObjectName("fittingNonRigid_label")
-        self.gridLayout_3.addWidget(self.fittingNonRigid_label, 6, 0, 1, 1)
         self.fittingFitRigidly_pushButton = QtGui.QPushButton(self.fitting_groupBox)
         self.fittingFitRigidly_pushButton.setObjectName("fittingFitRigidly_pushButton")
         self.gridLayout_3.addWidget(self.fittingFitRigidly_pushButton, 3, 1, 1, 1)
@@ -124,6 +118,18 @@ class Ui_ParametricFittingWidget(object):
         self.fittingYAxis_pushButton.setObjectName("fittingYAxis_pushButton")
         self.gridLayout_2.addWidget(self.fittingYAxis_pushButton, 0, 3, 1, 1)
         self.gridLayout_3.addWidget(self.frame_2, 2, 0, 1, 2)
+        self.fittingNonRigid_label = QtGui.QLabel(self.fitting_groupBox)
+        self.fittingNonRigid_label.setObjectName("fittingNonRigid_label")
+        self.gridLayout_3.addWidget(self.fittingNonRigid_label, 4, 0, 1, 1)
+        self.fittingFitEpochs_label = QtGui.QLabel(self.fitting_groupBox)
+        self.fittingFitEpochs_label.setObjectName("fittingFitEpochs_label")
+        self.gridLayout_3.addWidget(self.fittingFitEpochs_label, 6, 0, 1, 1)
+        self.fittingFitNonRigidly_pushButton = QtGui.QPushButton(self.fitting_groupBox)
+        self.fittingFitNonRigidly_pushButton.setObjectName("fittingFitNonRigidly_pushButton")
+        self.gridLayout_3.addWidget(self.fittingFitNonRigidly_pushButton, 4, 1, 1, 1)
+        self.fittingFitEpochs_pushButton = QtGui.QPushButton(self.fitting_groupBox)
+        self.fittingFitEpochs_pushButton.setObjectName("fittingFitEpochs_pushButton")
+        self.gridLayout_3.addWidget(self.fittingFitEpochs_pushButton, 6, 1, 1, 1)
         self.verticalLayout.addWidget(self.fitting_groupBox)
         spacerItem = QtGui.QSpacerItem(20, 557, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -173,10 +179,12 @@ class Ui_ParametricFittingWidget(object):
         self.fitting_groupBox.setTitle(QtGui.QApplication.translate("ParametricFittingWidget", "Fitting:", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Rigid:", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingScale_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Scale:", None, QtGui.QApplication.UnicodeUTF8))
-        self.fittingFitNonRigidly_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit non-rigidly", None, QtGui.QApplication.UnicodeUTF8))
-        self.fittingNonRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Non-Rigid:", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingFitRigidly_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit rigidly", None, QtGui.QApplication.UnicodeUTF8))
         self.fittingScale_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Scale", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingNonRigid_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Non-Rigid:", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingFitEpochs_label.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Throughout time:", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingFitNonRigidly_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit non-rigidly", None, QtGui.QApplication.UnicodeUTF8))
+        self.fittingFitEpochs_pushButton.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Fit epochs", None, QtGui.QApplication.UnicodeUTF8))
         self.viewAll_button.setText(QtGui.QApplication.translate("ParametricFittingWidget", "View All", None, QtGui.QApplication.UnicodeUTF8))
         self.done_button.setText(QtGui.QApplication.translate("ParametricFittingWidget", "Done", None, QtGui.QApplication.UnicodeUTF8))
 

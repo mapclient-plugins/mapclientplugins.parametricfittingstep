@@ -1,3 +1,5 @@
+from __future__ import division
+
 import os
 import json
 
@@ -131,6 +133,9 @@ class MasterModel(QtCore.QObject):
 
     def get_timekeeper_time(self):
         return self._timekeeper.getTime()
+
+    def get_time_for_epoch(self, epoch):
+        return epoch / self._frames_per_second + 1 / (2 * self._frame_count)
 
     def set_maximum_time_value(self, maximum_time_value):
         self._timekeeper.setMaximumTime(maximum_time_value)
