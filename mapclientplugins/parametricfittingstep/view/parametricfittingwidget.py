@@ -23,9 +23,9 @@ class ParametricFittingWidget(QtGui.QWidget):
     def __init__(self, model, parent=None):
         super(ParametricFittingWidget, self).__init__(parent)
         self._ui = Ui_ParametricFittingWidget()
-        self._ui.setupUi(self)
-        self._model = model
+        self._ui.setupUi(model.get_shareable_open_gl_widget(), self)
         self._ui.sceneviewer_widget.set_context(model.get_context())
+        self._model = model
         self._model.register_time_value_update_callback(self._update_time_value)
 
         self._fiducial_marker_locations = []

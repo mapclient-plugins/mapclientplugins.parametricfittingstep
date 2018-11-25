@@ -10,7 +10,7 @@
 from PySide import QtCore, QtGui
 
 class Ui_ParametricFittingWidget(object):
-    def setupUi(self, ParametricFittingWidget):
+    def setupUi(self, shared_open_gl_widget, ParametricFittingWidget):
         ParametricFittingWidget.setObjectName("ParametricFittingWidget")
         ParametricFittingWidget.resize(1093, 872)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
@@ -128,7 +128,7 @@ class Ui_ParametricFittingWidget(object):
         self.verticalLayout.addWidget(self.frame)
         self.dockWidget.setWidget(self.dockWidgetContents)
         self.gridLayout.addWidget(self.dockWidget, 0, 0, 1, 1)
-        self.sceneviewer_widget = BaseSceneviewerWidget(ParametricFittingWidget)
+        self.sceneviewer_widget = BaseSceneviewerWidget(ParametricFittingWidget, shared_open_gl_widget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(4)
         sizePolicy.setVerticalStretch(0)

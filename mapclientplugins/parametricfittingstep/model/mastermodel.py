@@ -28,6 +28,7 @@ class MasterModel(QtCore.QObject):
         self._identifier = identifier
         self._filenameStem = os.path.join(self._location, self._identifier)
         self._context = image_context_data.get_context()
+        self._shareable_widget = image_context_data.get_shareable_open_gl_widget()
         self._time_sequence = fitting_point_data['time_array']
         del fitting_point_data['time_array']
 
@@ -145,6 +146,9 @@ class MasterModel(QtCore.QObject):
 
     def get_context(self):
         return self._context
+
+    def get_shareable_open_gl_widget(self):
+        return self._shareable_widget
 
     def get_image_plane_model(self):
         return self._image_plane_model
