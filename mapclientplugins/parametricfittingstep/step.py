@@ -68,7 +68,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         # Ports:
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#provides',
-                      'http://physiomeproject.org/workflow/1.0/rdf-schema#file_location'))
+                      'http://physiomeproject.org/workflow/1.0/rdf-schema#mesh_description'))
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#image_context_data'))
@@ -108,7 +108,8 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         self._setCurrentWidget(self._view)
 
     def _myDoneExecution(self):
-        self._portData0 = self._model.get_output_model_file_name()
+        self._portData0 = self._model.get_scaffold_description()
+        self._model.done()
         self._view = None
         self._model = None
         self._doneExecution()

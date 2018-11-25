@@ -7,10 +7,15 @@ class Scaffold(object):
     def __init__(self, master_model):
         self._master_model = master_model
 
-    def create_graphics(self):
+    def _get_scene(self):
         scaffold_model = self._master_model.get_scaffold_model()
         region = scaffold_model.get_region()
-        scene = region.getScene()
+        return region.getScene()
+
+
+    def create_graphics(self):
+        scaffold_model = self._master_model.get_scaffold_model()
+        scene = self._get_scene()
         material_module = scene.getMaterialmodule()
         coordinate_field = scaffold_model.get_coordinate_field()
         field_module = coordinate_field.getFieldmodule()
@@ -42,3 +47,14 @@ class Scaffold(object):
         surfaces.setName('scaffold-surfaces')
 
         scene.endChange()
+
+    def write(self):
+        scene = self._get_scene()
+        stream_information = scene.createStreaminformationScene()
+        stream_information.setIOFormat(stream_information.IO_FORMAT_DESCRIPTION)
+        memory_resource = stream_information.createStreamresourceMemory()
+        scene.write(stream_information)
+        _, buffer_contents = memory_resource.getBuffer()
+
+        return buffer_contents
+

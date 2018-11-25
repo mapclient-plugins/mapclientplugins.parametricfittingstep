@@ -191,6 +191,28 @@ class Scaffold(Base):
     def perform_rigid_transformation_on_temp(self, rotation_mx, translation_vec):
         _perform_rigid_transformation(self._temp_region, rotation_mx, translation_vec)
 
+    def write(self):
+        resources = {}
+        stream_information = self._region.createStreaminformationRegion()
+        memory_resource = stream_information.createStreamresourceMemory()
+        resources['elements'] = memory_resource
+        stream_information.setResourceDomainTypes(memory_resource, Field.DOMAIN_TYPE_MESH3D)
+        # stream_information.setResourceAttributeReal(memory_resource, StreaminformationRegion.ATTRIBUTE_TIME, time)
+
+        time_values = self._master_model.get_time_sequence()
+        for time_value in time_values:
+            memory_resource = stream_information.createStreamresourceMemory()
+            stream_information.setResourceDomainTypes(memory_resource, Field.DOMAIN_TYPE_NODES)
+            stream_information.setResourceAttributeReal(memory_resource, StreaminformationRegion.ATTRIBUTE_TIME, time_value)
+            resources[time_value] = memory_resource
+        self._region.write(stream_information)
+
+        buffer_contents = {}
+        for key in resources:
+            buffer_contents[key] = resources[key].getBuffer()[1]
+
+        return buffer_contents
+
 
 def _perform_rigid_transformation(region, rotation_mx, translation_vec):
     field_module = region.getFieldmodule()

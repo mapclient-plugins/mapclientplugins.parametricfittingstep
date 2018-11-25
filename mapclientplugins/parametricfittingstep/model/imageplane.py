@@ -35,3 +35,13 @@ class ImagePlane(Base):
 
     def get_duration_field(self):
         return self._duration_field
+
+
+def _print_node_location(region, node_id):
+    field_module = region.getFieldmodule()
+    node_set = field_module.findNodesetByName('nodes')
+    node = node_set.findNodeByIdentifier(node_id)
+    field_cache = field_module.createFieldcache()
+    field_cache.setNode(node)
+    coordinate_field = field_module.findFieldByName('scaled_coordinates')
+    print(coordinate_field.evaluateReal(field_cache, 3))

@@ -105,8 +105,6 @@ class ParametricFittingWidget(QtGui.QWidget):
 
     def _done_button_clicked(self):
         self._ui.dockWidget.setFloating(False)
-        self._model.done()
-        self._model = None
         self._done_callback()
 
     def _time_value_changed(self, value):

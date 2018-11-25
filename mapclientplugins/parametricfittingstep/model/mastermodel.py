@@ -208,5 +208,39 @@ class MasterModel(QtCore.QObject):
         with open(self._filenameStem + '_settings.json', 'w') as f:
             f.write(json.dumps(settings, default=lambda o: o.__dict__, sort_keys=True, indent=4))
 
-    def get_output_model_file_name(self):
-        return 'not-a-file'
+    def get_scaffold_description(self):
+        region_description = self._scaffold_model.write()
+        scene_description = self._scaffold_scene.write()
+        end_time = self._timekeeper.getMaximumTime()
+        epochs = [1.0] * self._frame_count
+        epochs[0] = 0.0
+        epochs[-1] = end_time
+        scaffold_description = ScaffoldDescription(region_description, scene_description, epochs)
+        return scaffold_description
+
+
+class ScaffoldDescription(object):
+
+    def __init__(self, region_description, scene_description, epochs=None):
+        self._region_description = region_description
+        self._scene_description = scene_description
+        if epochs:
+            self._epochs = epochs
+        else:
+            self._epochs = []
+
+
+    def get_region_description(self):
+        return self._region_description
+
+    def get_scene_description(self):
+        return self._scene_description
+
+    def get_start_time(self):
+        return self._epochs[0]
+
+    def get_end_time(self):
+        return self._epochs[-1]
+
+    def get_epoch_count(self):
+        return len(self._epochs)
