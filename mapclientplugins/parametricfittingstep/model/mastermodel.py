@@ -233,7 +233,6 @@ class ScaffoldDescription(object):
         else:
             self._epochs = []
 
-
     def get_region_description(self):
         return self._region_description
 
