@@ -40,12 +40,6 @@ class ParametricFittingWidget(QtGui.QWidget):
                                     'rv1': 175, 'rv2': 191,
                                     'rb1': 255, 'rb2': 210,
                                     'lb1': 258, 'lb2': 237}
-        self._fiducial_fit_nodes = {'lv_apex': 1, 'rv_apex': 5,
-                                    'lv1': 6, 'lv2': 7,
-                                    'sept1': 8, 'sept2': 9,
-                                    'rv1': 10, 'rv2': 11,
-                                    'rb1': 12, 'rb2': 2,
-                                    'lb1': 3, 'lb2': 4}
         self._applied_rotation_mx = np.matrix('1 0 0; 0 1 0; 0 0 1')
         self._applied_translation_vec = np.matrix('0; 0; 0')
         self._applied_width_scale = 1
@@ -188,19 +182,19 @@ class ParametricFittingWidget(QtGui.QWidget):
         fiducial_markers_model = self._model.get_fiducial_markers_model()
 
         lv_apex_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv_apex'], epoch)
+            fiducial_markers_model.get_node_location('lv_apex', epoch)
         rv_lateral_point_1_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv1'], epoch)
+            fiducial_markers_model.get_node_location('rv1', epoch)
         rv_lateral_point_2_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['rv2'], epoch)
+            fiducial_markers_model.get_node_location('rv2', epoch)
         septum_point_1_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept1'], epoch)
+            fiducial_markers_model.get_node_location('sept1', epoch)
         septum_point_2_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['sept2'], epoch)
+            fiducial_markers_model.get_node_location('sept2', epoch)
         lv_lateral_point_1_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv1'], epoch)
+            fiducial_markers_model.get_node_location('lv1', epoch)
         lv_lateral_point_2_fiducial_marker = \
-            fiducial_markers_model.get_node_location(self._fiducial_fit_nodes['lv2'], epoch)
+            fiducial_markers_model.get_node_location('lv2', epoch)
 
         fiducial_marker_locations = [lv_apex_fiducial_marker,
                                      rv_lateral_point_1_fiducial_marker,

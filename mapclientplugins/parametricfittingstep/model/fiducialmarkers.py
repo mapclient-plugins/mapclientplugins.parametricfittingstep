@@ -21,7 +21,6 @@ class FiducialMarkers(Base):
         super(FiducialMarkers, self).__init__()
         self._master_model = master_model
         self._fiducial_marker_data = None
-        self._node_id_to_data_key_map = {}
         self._region = None
 
         self._initialise()
@@ -53,7 +52,6 @@ class FiducialMarkers(Base):
             location = locations[0]
             node_creator = NodeCreator(location, time_array)
             identifier = create_node(field_module, node_creator, node_set_name='datapoints', time=time_array[0])
-            self._node_id_to_data_key_map[identifier] = key
             node = node_set.findNodeByIdentifier(identifier)
             field_cache.setNode(node)
             assert time_array_size == len(locations)
@@ -82,11 +80,10 @@ class FiducialMarkers(Base):
 
         return locations
 
-    def get_node_location(self, node_id, index=0):
+    def get_node_location(self, node_label, index=0):
         location = []
-        data_key = self._node_id_to_data_key_map[node_id]
-        if data_key in self._fiducial_marker_data:
-            location = self._fiducial_marker_data[data_key][index]
+        if node_label in self._fiducial_marker_data:
+            location = self._fiducial_marker_data[node_label][index]
 
         return location
 
