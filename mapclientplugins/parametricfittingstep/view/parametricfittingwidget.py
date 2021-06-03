@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
-from PySide import QtGui
+from PySide2 import QtWidgets
 
 from opencmiss.zinc.status import OK as ZINC_OK
 from opencmiss.zinc.node import Node
@@ -18,7 +18,7 @@ PLAY_TEXT = 'Play'
 STOP_TEXT = 'Stop'
 
 
-class ParametricFittingWidget(QtGui.QWidget):
+class ParametricFittingWidget(QtWidgets.QWidget):
 
     def __init__(self, model, parent=None):
         super(ParametricFittingWidget, self).__init__(parent)
@@ -151,7 +151,7 @@ class ParametricFittingWidget(QtGui.QWidget):
         self._applied_translation_vec = translation_vec
 
     def _do_non_linear_fit(self):
-        progress = QtGui.QProgressDialog("Fitting initial epoch ...", "Abort Fitting", 0, 5, self)
+        progress = QtWidgets.QProgressDialog("Fitting initial epoch ...", "Abort Fitting", 0, 5, self)
         progress.setValue(2)
         self._do_non_linear_fit_at_epoch(0)
         progress.setValue(5)
@@ -170,7 +170,7 @@ class ParametricFittingWidget(QtGui.QWidget):
 
     def _do_epochs_fit(self):
         epoch_count = self._model.get_frame_count()
-        progress = QtGui.QProgressDialog("Fitting over all epochs ...", "Abort Fitting", 0, epoch_count, self)
+        progress = QtWidgets.QProgressDialog("Fitting over all epochs ...", "Abort Fitting", 0, epoch_count, self)
         for epoch in range(1, epoch_count):
             progress.setValue(epoch)
             self._do_non_linear_fit_at_epoch(epoch)

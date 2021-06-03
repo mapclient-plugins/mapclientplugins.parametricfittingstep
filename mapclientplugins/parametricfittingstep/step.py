@@ -4,7 +4,7 @@ MAP Client Plugin Step
 """
 import json
 
-from PySide import QtGui
+from PySide2 import QtGui, QtWidgets
 
 from scaffoldmaker.scaffolds import Scaffolds
 
@@ -141,7 +141,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         then set:
             self._configured = True
         """
-        dlg = ConfigureDialog(QtGui.QApplication.activeWindow().currentWidget())
+        dlg = ConfigureDialog(QtWidgets.QApplication.activeWindow().currentWidget())
         dlg.identifierOccursCount = self._identifierOccursCount
         dlg.setConfig(self._config)
         dlg.validate()
