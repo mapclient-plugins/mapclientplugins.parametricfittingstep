@@ -1,4 +1,3 @@
-
 """
 MAP Client Plugin
 """

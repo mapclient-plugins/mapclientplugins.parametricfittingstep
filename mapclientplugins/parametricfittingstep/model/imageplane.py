@@ -1,4 +1,3 @@
-
 from mapclientplugins.parametricfittingstep.model.base import Base
 
 

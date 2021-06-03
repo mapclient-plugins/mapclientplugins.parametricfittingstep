@@ -12,7 +12,6 @@ class Scaffold(object):
         region = scaffold_model.get_region()
         return region.getScene()
 
-
     def create_graphics(self):
         scaffold_model = self._master_model.get_scaffold_model()
         scene = self._get_scene()
@@ -57,4 +56,3 @@ class Scaffold(object):
         _, buffer_contents = memory_resource.getBuffer()
 
         return buffer_contents
-

@@ -1,4 +1,3 @@
-
 import numpy as np
 from scipy.optimize import minimize
 
@@ -366,7 +365,6 @@ class ParametricFittingWidget(QtWidgets.QWidget):
 
 
 def _get_node_numpy_array(field_cache, field_module, nodes, coordinates):
-
     field_module.beginChange()
     node_iter = nodes.createNodeiterator()
     node = node_iter.next()
@@ -381,7 +379,6 @@ def _get_node_numpy_array(field_cache, field_module, nodes, coordinates):
 
 
 def _set_node_parameters(field_cache, field_module, nodes, coordinates, transformed_nodes, numpy_array, rigid=True):
-
     field_module.beginChange()
     node_iter = nodes.createNodeiterator()
     node = node_iter.next()
