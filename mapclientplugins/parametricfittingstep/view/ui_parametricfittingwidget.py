@@ -12,7 +12,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from opencmiss.zincwidgets.basesceneviewerwidget import BaseSceneviewerWidget
+from opencmiss.utils.zinc.widgets.basesceneviewerwidget import BaseSceneviewerWidget
 
 from  . import resources_rc
 
