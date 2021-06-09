@@ -3,8 +3,6 @@ MAP Client Plugin Step
 """
 import json
 
-from PySide2 import QtGui, QtWidgets
-
 from scaffoldmaker.scaffolds import Scaffolds
 
 from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint

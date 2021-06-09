@@ -1,6 +1,6 @@
 import numpy as np
 
-from opencmiss.utils.zinc import create_finite_element_field
+from opencmiss.utils.zinc.field import create_field_finite_element
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
 from opencmiss.zinc.streamregion import StreaminformationRegion
@@ -36,7 +36,7 @@ class Scaffold(Base):
         if self._region:
             self._parent_region.removeChild(self._region)
         self._region = self._parent_region.createChild(self._region_name)
-        self._coordinate_field = create_finite_element_field(self._region)
+        self._coordinate_field = create_field_finite_element(self._region)
 
     def set_scaffold(self, scaffold):
         self._scaffold = scaffold
