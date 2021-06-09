@@ -12,7 +12,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from opencmiss\zincwidgets\basesceneviewerwidget import BaseSceneviewerWidget
+from opencmiss.zincwidgets.basesceneviewerwidget import BaseSceneviewerWidget
 
 from  . import resources_rc
 
@@ -154,8 +154,8 @@ class Ui_ParametricFittingWidget(object):
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_2 = QHBoxLayout(self.frame)
-        self.horizontalLayout_2.setContentsMargins(3, 3, 3, 3)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(3, 3, 3, 3)
         self.viewAll_button = QPushButton(self.frame)
         self.viewAll_button.setObjectName(u"viewAll_button")
 
