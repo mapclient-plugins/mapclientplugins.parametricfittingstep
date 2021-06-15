@@ -1,4 +1,3 @@
-
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.glyph import Glyph
 
@@ -35,4 +34,3 @@ class FiducialMarkers(object):
 
         # scene.setSelectionField(fiducial_markers_model.get_selection_field())
         scene.endChange()
-

@@ -1,6 +1,7 @@
 import math
 
-from opencmiss.utils.zinc import create_node, create_finite_element_field, AbstractNodeDataObject
+from opencmiss.utils.zinc.general import create_node, AbstractNodeDataObject
+from opencmiss.utils.zinc.field import create_field_finite_element
 
 from mapclientplugins.parametricfittingstep.model.base import Base
 
@@ -29,7 +30,7 @@ class FiducialMarkers(Base):
         context = self._master_model.get_context()
         default_region = context.getDefaultRegion()
         self._region = default_region.createChild('fiducial')
-        self._coordinate_field = create_finite_element_field(self._region)
+        self._coordinate_field = create_field_finite_element(self._region)
 
     def set_data(self, data):
         self._fiducial_marker_data = data

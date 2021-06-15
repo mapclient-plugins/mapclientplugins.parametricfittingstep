@@ -1,13 +1,11 @@
-
 import numpy as np
 
-from opencmiss.utils.zinc import create_finite_element_field
+from opencmiss.utils.zinc.field import create_field_finite_element
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
 from opencmiss.zinc.streamregion import StreaminformationRegion
 
 from mapclientplugins.parametricfittingstep.model.base import Base
-
 
 DISPLAY_SURFACES_TRANSLUCENT_KEY = 'display_surface'
 FIT_OPTIONS = ['LV outer height', 'Base height', 'LV outer radius', 'RV width']
@@ -38,7 +36,7 @@ class Scaffold(Base):
         if self._region:
             self._parent_region.removeChild(self._region)
         self._region = self._parent_region.createChild(self._region_name)
-        self._coordinate_field = create_finite_element_field(self._region)
+        self._coordinate_field = create_field_finite_element(self._region)
 
     def set_scaffold(self, scaffold):
         self._scaffold = scaffold
@@ -203,7 +201,8 @@ class Scaffold(Base):
         for time_value in time_values:
             memory_resource = stream_information.createStreamresourceMemory()
             stream_information.setResourceDomainTypes(memory_resource, Field.DOMAIN_TYPE_NODES)
-            stream_information.setResourceAttributeReal(memory_resource, StreaminformationRegion.ATTRIBUTE_TIME, time_value)
+            stream_information.setResourceAttributeReal(memory_resource, StreaminformationRegion.ATTRIBUTE_TIME,
+                                                        time_value)
             resources[time_value] = memory_resource
         self._region.write(stream_information)
 
@@ -249,7 +248,6 @@ def _get_node_location(region, time_values, time_index, node_id):
 
 
 def _scale_width(options, width):
-
     width_options = ['LV outer radius', 'LV free wall thickness', 'LV apex thickness',
                      'RV width', 'RV extra cross radius base', 'Ventricular septum thickness',
                      'Atria base inner major axis length', 'Atria base inner minor axis length',
@@ -261,7 +259,6 @@ def _scale_width(options, width):
 
 
 def _scale_height(options, height):
-
     height_options = ['LV outer height', 'RV inner height', 'RV free wall thickness',
                       'Base height', 'Base thickness', 'Fibrous ring thickness',
                       'Ventricles outlet element length', 'Ventricles outlet spacing']

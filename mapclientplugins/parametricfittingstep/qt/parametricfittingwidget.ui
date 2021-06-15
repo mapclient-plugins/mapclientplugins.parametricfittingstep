@@ -213,7 +213,16 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <property name="margin">
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
            <number>3</number>
           </property>
           <item>
@@ -272,7 +281,7 @@
   <customwidget>
    <class>BaseSceneviewerWidget</class>
    <extends>QWidget</extends>
-   <header>opencmiss\zincwidgets\basesceneviewerwidget.h</header>
+   <header>opencmiss/utils/zinc/widgets/basesceneviewerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -3,7 +3,7 @@ from __future__ import division
 import os
 import json
 
-from PySide import QtCore
+from PySide2 import QtCore
 
 from opencmiss.zinc.material import Material
 
@@ -14,12 +14,10 @@ from mapclientplugins.parametricfittingstep.scene.imageplane import ImagePlane a
 from mapclientplugins.parametricfittingstep.model.scaffold import Scaffold as ScaffoldModel
 from mapclientplugins.parametricfittingstep.scene.scaffold import Scaffold as ScaffoldScene
 
-
 TIME_LOOP_KEY = 'time_loop'
 
 
 class MasterModel(QtCore.QObject):
-
     time_stopped = QtCore.Signal()
 
     def __init__(self, location, identifier, image_context_data, fitting_point_data, scaffold):
@@ -82,18 +80,18 @@ class MasterModel(QtCore.QObject):
         solid_blue = self._materialmodule.createMaterial()
         solid_blue.setName('solid_blue')
         solid_blue.setManaged(True)
-        solid_blue.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.0, 0.2, 0.6 ])
-        solid_blue.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.0, 0.7, 1.0 ])
-        solid_blue.setAttributeReal3(Material.ATTRIBUTE_EMISSION, [0.0, 0.0, 0.0 ])
-        solid_blue.setAttributeReal3(Material.ATTRIBUTE_SPECULAR, [0.1, 0.1, 0.1 ])
+        solid_blue.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.0, 0.2, 0.6])
+        solid_blue.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.0, 0.7, 1.0])
+        solid_blue.setAttributeReal3(Material.ATTRIBUTE_EMISSION, [0.0, 0.0, 0.0])
+        solid_blue.setAttributeReal3(Material.ATTRIBUTE_SPECULAR, [0.1, 0.1, 0.1])
         solid_blue.setAttributeReal(Material.ATTRIBUTE_SHININESS, 0.2)
         trans_blue = self._materialmodule.createMaterial()
         trans_blue.setName('trans_blue')
         trans_blue.setManaged(True)
-        trans_blue.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.0, 0.2, 0.6 ])
-        trans_blue.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.0, 0.7, 1.0 ])
-        trans_blue.setAttributeReal3(Material.ATTRIBUTE_EMISSION, [0.0, 0.0, 0.0 ])
-        trans_blue.setAttributeReal3(Material.ATTRIBUTE_SPECULAR, [0.1, 0.1, 0.1 ])
+        trans_blue.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.0, 0.2, 0.6])
+        trans_blue.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.0, 0.7, 1.0])
+        trans_blue.setAttributeReal3(Material.ATTRIBUTE_EMISSION, [0.0, 0.0, 0.0])
+        trans_blue.setAttributeReal3(Material.ATTRIBUTE_SPECULAR, [0.1, 0.1, 0.1])
         trans_blue.setAttributeReal(Material.ATTRIBUTE_ALPHA, 0.3)
         trans_blue.setAttributeReal(Material.ATTRIBUTE_SHININESS, 0.2)
         glyphmodule = self._context.getGlyphmodule()
@@ -176,7 +174,7 @@ class MasterModel(QtCore.QObject):
         return self._settings[TIME_LOOP_KEY]
 
     def play(self):
-        self._timer.start(1000/self._frames_per_second)
+        self._timer.start(1000 / self._frames_per_second)
 
     def stop(self):
         self._timer.stop()

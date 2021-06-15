@@ -1,10 +1,7 @@
-
 """
 MAP Client Plugin Step
 """
 import json
-
-from PySide import QtGui
 
 from scaffoldmaker.scaffolds import Scaffolds
 
@@ -61,7 +58,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
 
     def __init__(self, location):
         super(ParametricFittingStep, self).__init__('Parametric Fitting', location)
-        self._configured = False # A step cannot be executed until it has been configured.
+        self._configured = False  # A step cannot be executed until it has been configured.
         self._category = 'Fitting'
         # Add any other initialisation code here:
         # self._icon =  QtGui.QImage(':/parametricfitting/images/model-viewer.png')
@@ -79,7 +76,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#scaffold_description'))
         # Port data:
-        self._portData0 = None # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
+        self._portData0 = None  # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
         self._image_context_data = None
         self._time_labelled_nodal_locations = None
         self._scaffold_description = '3D Heart Ventricles with Base 2'
@@ -122,7 +119,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
 
         :param index: Index of the port to return.
         """
-        return self._portData0 # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
+        return self._portData0  # http://physiomeproject.org/workflow/1.0/rdf-schema#file_location
 
     def setPortData(self, index, data):
         if index == 1:
@@ -131,7 +128,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
             self._time_labelled_nodal_locations = data
         elif index == 3:
             print('index is three@@@@@@'
-            )
+                  )
 
     def configure(self):
         """
@@ -141,7 +138,7 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         then set:
             self._configured = True
         """
-        dlg = ConfigureDialog(QtGui.QApplication.activeWindow().currentWidget())
+        dlg = ConfigureDialog(self._main_window)
         dlg.identifierOccursCount = self._identifierOccursCount
         dlg.setConfig(self._config)
         dlg.validate()
@@ -185,5 +182,3 @@ class ParametricFittingStep(WorkflowStepMountPoint):
         d.identifierOccursCount = self._identifierOccursCount
         d.setConfig(self._config)
         self._configured = d.validate()
-
-
