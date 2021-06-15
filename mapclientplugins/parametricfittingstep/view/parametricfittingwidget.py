@@ -6,7 +6,6 @@ from PySide2 import QtWidgets
 from opencmiss.zinc.status import OK as ZINC_OK
 from opencmiss.zinc.node import Node
 from opencmiss.zinc.field import Field
-#from opencmiss.zinchandlers.scenemanipulation import SceneManipulation
 from opencmiss.utils.zinc.handlers.scenemanipulation import SceneManipulation
 
 from sparc.parametricfitting.rigidfitting import RigidFitting
