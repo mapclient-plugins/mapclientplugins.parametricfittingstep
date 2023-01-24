@@ -2,7 +2,7 @@
 MAP Client Plugin
 """
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Mahyar Osanlouy'
 __stepname__ = 'Parametric Fitting'
 __location__ = ''
