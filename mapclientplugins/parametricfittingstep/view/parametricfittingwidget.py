@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 from opencmiss.zinc.status import OK as ZINC_OK
 from opencmiss.zinc.node import Node

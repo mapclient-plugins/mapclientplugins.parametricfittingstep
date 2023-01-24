@@ -3,7 +3,7 @@ from __future__ import division
 import os
 import json
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 from opencmiss.zinc.material import Material
 
