@@ -1,9 +1,9 @@
 import numpy as np
 
-from opencmiss.utils.zinc.field import create_field_finite_element
-from opencmiss.zinc.field import Field
-from opencmiss.zinc.node import Node
-from opencmiss.zinc.streamregion import StreaminformationRegion
+from cmlibs.utils.zinc.field import create_field_finite_element
+from cmlibs.zinc.field import Field
+from cmlibs.zinc.node import Node
+from cmlibs.zinc.streamregion import StreaminformationRegion
 
 from mapclientplugins.parametricfittingstep.model.base import Base
 

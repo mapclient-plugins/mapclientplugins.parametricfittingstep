@@ -1,5 +1,5 @@
-from opencmiss.zinc.field import Field
-from opencmiss.zinc.graphics import Graphics
+from cmlibs.zinc.field import Field
+from cmlibs.zinc.graphics import Graphics
 
 
 class Scaffold(object):

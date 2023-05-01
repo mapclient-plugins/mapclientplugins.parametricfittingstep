@@ -1,5 +1,5 @@
-from opencmiss.zinc.field import Field
-from opencmiss.zinc.glyph import Glyph
+from cmlibs.zinc.field import Field
+from cmlibs.zinc.glyph import Glyph
 
 
 class FiducialMarkers(object):

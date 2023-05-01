@@ -1,7 +1,7 @@
 import math
 
-from opencmiss.utils.zinc.general import create_node, AbstractNodeDataObject
-from opencmiss.utils.zinc.field import create_field_finite_element
+from cmlibs.utils.zinc.general import create_node, AbstractNodeDataObject
+from cmlibs.utils.zinc.field import create_field_finite_element
 
 from mapclientplugins.parametricfittingstep.model.base import Base
 

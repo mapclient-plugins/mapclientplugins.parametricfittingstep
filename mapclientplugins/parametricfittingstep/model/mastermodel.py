@@ -5,7 +5,7 @@ import json
 
 from PySide6 import QtCore
 
-from opencmiss.zinc.material import Material
+from cmlibs.zinc.material import Material
 
 from mapclientplugins.parametricfittingstep.model.fiducialmarkers import FiducialMarkers as FiducialMarkersModel
 from mapclientplugins.parametricfittingstep.scene.fiducialmarkers import FiducialMarkers as FiducialMarkersScene

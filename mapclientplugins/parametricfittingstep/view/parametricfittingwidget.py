@@ -3,10 +3,10 @@ from scipy.optimize import minimize
 
 from PySide6 import QtWidgets
 
-from opencmiss.zinc.status import OK as ZINC_OK
-from opencmiss.zinc.node import Node
-from opencmiss.zinc.field import Field
-from opencmiss.utils.zinc.handlers.scenemanipulation import SceneManipulation
+from cmlibs.zinc.status import OK as ZINC_OK
+from cmlibs.zinc.node import Node
+from cmlibs.zinc.field import Field
+from cmlibs.widgets.handlers.scenemanipulation import SceneManipulation
 
 from sparc.parametricfitting.rigidfitting import RigidFitting
 from sparc.parametricfitting.deformablefitting import DeformableFitting

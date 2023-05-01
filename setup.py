@@ -20,7 +20,7 @@ readme = readfile("README.rst", split=True)[3:]  # skip title
 # For requirements not hosted on PyPi place listings
 # into the 'requirements.txt' file.
 requires = ['get-image-size',
-            'opencmiss.utils>=0.3.0',
+            'cmlibs.utils>=0.3.0',
             'numpy']  # minimal requirements listing
 source_license = readfile("LICENSE")
 
